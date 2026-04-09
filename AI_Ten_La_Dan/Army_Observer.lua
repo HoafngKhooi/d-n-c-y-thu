@@ -2,7 +2,7 @@ local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local Player = game.Players.LocalPlayer
 -- QUAN TRỌNG: Thay link Public từ tab Cổng (Ports) của bạn vào đây
-local GATEWAY_URL = "https://organic-space-fishstick-wr66v5gpjvjwhgj5r-5000.app.github.dev//update_state" 
+local GATEWAY_URL = "https://symmetrical-doodle-wr66v5gpjv7wh9vx7-5000.app.github.dev/update_state" 
 
 RunService.Heartbeat:Connect(function()
     -- Lấy dữ liệu tiền để AI biết nó có đang farm hiệu quả không
