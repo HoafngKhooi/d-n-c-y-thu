@@ -1,3 +1,4 @@
+print("--- SCRIPT DANG KICH HOAT ---") -- Thêm dòng này vào đầu tiên
 local HttpService = game:GetService("HttpService")
 local RunService = game:GetService("RunService")
 local Player = game.Players.LocalPlayer
