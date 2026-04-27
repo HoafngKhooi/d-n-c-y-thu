@@ -7,50 +7,50 @@ import os
 api_key = os.environ.get("GEMINI_KEY")
 genai.configure(api_key=api_key)
 
-# HÀM CHỌN MODEL THÔNG MINH (Tránh lỗi 404)
-def get_model():
-    try:
-        # Thử dùng bản flash mới nhất
-        return genai.GenerativeModel('gemini-1.5-flash')
-    except:
-        # Nếu không được thì dùng bản dự phòng phổ biến nhất
-        return genai.GenerativeModel('gemini-pro')
-
-model = get_model()
+# Dùng thẳng tên model ổn định nhất năm 2026
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 class AIChat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        # ID kênh chat của ông
         self.target_channel_id = 1497555474852089947
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        # Không trả lời bot khác
         if message.author.bot: return
 
-        # Kiểm tra nếu được tag hoặc trong đúng kênh chat
-        if self.bot.user in message.mentions or message.channel.id == self.target_channel_id:
+        # Kiểm tra nếu được tag hoặc nhắn trong kênh chỉ định
+        is_mentioned = self.bot.user in message.mentions
+        is_in_channel = message.channel.id == self.target_channel_id
+
+        if is_mentioned or is_in_channel:
             async with message.channel.typing():
                 try:
-                    # Lấy nội dung chat (bỏ tag bot)
-                    prompt = message.content.replace(f'<@!{self.bot.user.id}>', '').replace(f'<@{self.bot.user.id}>', '').strip()
-                    if not prompt: prompt = "Xin chào"
+                    # Xử lý nội dung tin nhắn
+                    content = message.content.replace(f'<@!{self.bot.user.id}>', '').replace(f'<@{self.bot.user.id}>', '').strip()
+                    if not content: content = "Xin chào"
 
-                    # Gọi AI với cơ chế bắt lỗi chi tiết
-                    response = model.generate_content(prompt)
+                    # Gọi Gemini
+                    response = model.generate_content(content)
                     
                     if response.text:
                         await message.reply(response.text)
                     else:
-                        await message.reply("😅 Tui chưa nghĩ ra câu trả lời, thử lại nhé!")
+                        await message.reply("😅 AI không phản hồi nội dung này, thử câu khác nha!")
 
                 except Exception as e:
-                    error_msg = str(e)
-                    print(f"Lỗi AI: {error_msg}")
-                    # Nếu lỗi Key, báo cho chủ nhân biết
-                    if "API_KEY_INVALID" in error_msg or "expired" in error_msg:
-                        await message.reply("❌ Lỗi: API Key của Gemini đã hết hạn hoặc không hợp lệ. Khôi ơi cập nhật Key đi!")
+                    error_str = str(e)
+                    print(f"Lỗi AI: {error_str}")
+                    
+                    # Bắt lỗi Key hết hạn hoặc sai
+                    if "API_KEY_INVALID" in error_str or "expired" in error_str:
+                        await message.reply("❌ Lỗi: API Key Gemini đã hết hạn hoặc sai rồi Khôi ơi!")
+                    elif "404" in error_str:
+                        await message.reply("❌ Lỗi: Model AI chưa sẵn sàng hoặc sai phiên bản (404).")
                     else:
-                        await message.reply(f"❌ Lỗi hệ thống: `{error_msg[:100]}`")
+                        await message.reply(f"❌ Lỗi hệ thống: `{error_str[:100]}`")
 
 def setup(bot):
     bot.add_cog(AIChat(bot))
