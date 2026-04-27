@@ -10,8 +10,8 @@ model = genai.GenerativeModel('gemini-pro')
 class AIChat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.target_channel_id = 123456789  # THAY ID KÊNH CHO PHÉP NHẮN TỰ DO VÀO ĐÂY
-        self.log_channel_id = 987654321    # THAY ID KÊNH LƯU LOG VÀO ĐÂY
+        self.target_channel_id = 1497555474852089947  # THAY ID KÊNH CHO PHÉP NHẮN TỰ DO VÀO ĐÂY
+        self.log_channel_id = 1498324476851392612    # THAY ID KÊNH LƯU LOG VÀO ĐÂY
 
     @commands.Cog.listener()
     async def on_message(self, message):
