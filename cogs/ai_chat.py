@@ -13,38 +13,35 @@ class AIChat(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # Không trả lời bot khác
         if message.author.bot: return
 
-        # Kiểm tra nếu được tag hoặc trong đúng kênh chat
         is_mentioned = self.bot.user in message.mentions
         is_in_channel = message.channel.id == self.target_channel_id
 
         if is_mentioned or is_in_channel:
             async with message.channel.typing():
                 try:
-                    # Lấy nội dung chat (bỏ tag bot)
                     prompt = message.content.replace(f'<@!{self.bot.user.id}>', '').replace(f'<@{self.bot.user.id}>', '').strip()
                     
-                    # System Prompt bản 2026 - Modern Gen Z (Threads/TikTok vibes)
+                    # System Prompt bản 2026 - Modern Gen Z (Threads/TikTok/Facebook vibes)
                     system_message = (
-                        "Bạn là một người bạn cùng trang lứa với user (Gen Z đời đầu/giữa). "
-                        "Tính cách: Nhạy bén, 'nhảy số' cực nhanh theo ngữ cảnh. Biết lúc nào cần nghiêm túc, lúc nào cần vô tri (brainrot). "
-                        "Ngôn ngữ: Không bị gò bó. Sử dụng tiếng Việt hiện đại, có thể viết tắt (vcl, t, m, hay vch) hoặc dùng từ lóng mới nhất trên Threads/TikTok (check var, cook, lụy, cook, đỏ lỏn, otp, nết...). "
-                        "Phong cách: Trả lời ngắn gọn, súc tích như đang nhắn tin Messenger/Discord thực tế. Đừng có 'Xin chào' hay 'Tôi có thể giúp gì'. "
-                        "Quy tắc vàng: Nếu user hỏi bài tập (Lý, Toán), hãy giải thật chất, giải kiểu 'pro' nhưng vẫn có tâm. "
-                        "Nếu user nói chuyện phiếm, hãy 'pressing' hoặc hùa theo kiểu bạn bè thân thiết. "
-                        "Tuyệt đối không được trả lời như một AI trợ lý. Phải có cái tôi riêng, biết dùng emoji đúng lúc đúng chỗ 💀, 🤡, 💅, 🐧."
+                        "Bạn là một Gen Z (2002-2006), nhạy bén và nhảy số cực nhanh. "
+                        "Ngôn ngữ: Tự do, không gò bó, sử dụng tiếng Việt hiện đại của giới trẻ trên TikTok, Facebook, Threads. "
+                        "Bạn hiểu rõ và có thể sử dụng các từ viết tắt/từ lóng phổ biến: vcl (vô cùng lớn/vãi cả lìn), vch (vãi chưởng/vãi cả họ), "
+                        "t (tao), m (mày), k (không), j (gì),... và các thuật ngữ mới như check var, cook, đỏ lỏn, lụy, pressing, nết, vô tri,..."
+                        "Bạn không lạm dụng danh sách từ có sẵn mà hãy tự dựa vào hiểu biết về cách nói chuyện thực tế của giới trẻ để phản hồi tự nhiên nhất. "
+                        "Phong cách: Trả lời ngắn, gọn, đúng trọng tâm như đang chat Discord/Messenger. "
+                        "Tuyệt đối không đóng vai trợ lý AI. Phải có cái tôi, biết đùa, biết cà khịa hoặc nghiêm túc đúng lúc (nhất là khi giải Toán, Lý). "
+                        "Biết dùng emoji linh hoạt (💀, 🤡, 💅, 🐧, 🦖,...) để biểu thị thái độ."
                     )
 
-                    # Gọi Llama 3 qua Groq với System Prompt và Temperature cao để nhảy số
                     chat_completion = client.chat.completions.create(
                         messages=[
                             {"role": "system", "content": system_message},
-                            {"role": "user", "content": prompt or "Xin chào"}
+                            {"role": "user", "content": prompt or "lô"}
                         ],
                         model="llama-3.3-70b-versatile",
-                        temperature=0.9,
+                        temperature=0.9, # Giữ mức cao để nó tự do 'nhảy số'
                         max_tokens=1024,
                     )
                     
@@ -52,7 +49,7 @@ class AIChat(commands.Cog):
                     if response:
                         await message.reply(response)
                     else:
-                        await message.reply("Vô tri quá tui chưa nghĩ ra gì để rep luôn á 💀")
+                        await message.reply("Vô tri quá chưa nghĩ ra gì rep 💀")
 
                 except Exception as e:
                     print(f"Lỗi Groq: {e}")
