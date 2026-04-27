@@ -4,7 +4,6 @@ import os
 from flask import Flask
 from threading import Thread
 
-# --- WEB KEEP ALIVE (Giữ Bot không bị ngủ trên Render) ---
 app = Flask('')
 @app.route('/')
 def home(): return "Bot is Online!"
@@ -14,8 +13,6 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# --- BOT SETUP ---
-# Nhớ bật "Message Content Intent" trong Discord Developer Portal nhé!
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
@@ -23,7 +20,6 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f"✅ Đã kết nối thành công: {bot.user}")
 
-# --- HÀM NẠP TÍNH NĂNG (COGS) ---
 def load_all_cogs():
     if not os.path.exists('./cogs'):
         os.makedirs('./cogs')
@@ -42,4 +38,4 @@ if __name__ == "__main__":
     if token:
         bot.run(token)
     else:
-        print("❌ LỖI: Thiếu DISCORD_TOKEN trong Environment Variables!")
+        print("❌ LỖI: Thiếu DISCORD_TOKEN!")
