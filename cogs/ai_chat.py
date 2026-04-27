@@ -9,7 +9,7 @@ genai.configure(api_key=api_key)
 
 # Dùng model Flash cho nhẹ và chuẩn 2026
 model = genai.GenerativeModel(
-    model_name='gemini-1.5-flash',
+    model_name='models/gemini-1.5-flash',
     safety_settings=[
         {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
         {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
