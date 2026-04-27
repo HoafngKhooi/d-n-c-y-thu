@@ -11,8 +11,8 @@ class AIChat(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         # --- CÀI ĐẶT ID Ở ĐÂY ---
-        self.target_channel_id = 123456789  # ID kênh cho phép AI chat tự do
-        self.log_channel_id = 987654321    # ID kênh riêng tư để bạn xem log
+        self.target_channel_id = 1497555474852089947  # ID kênh cho phép AI chat tự do
+        self.log_channel_id = 1498324476851392612    # ID kênh riêng tư để bạn xem log
 
     @commands.Cog.listener()
     async def on_message(self, message):
