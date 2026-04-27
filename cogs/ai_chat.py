@@ -7,7 +7,7 @@ import os
 api_key = os.environ.get("GEMINI_KEY")
 if api_key:
     genai.configure(api_key=api_key)
-    # Sử dụng gemini-1.5-flash: Nhanh hơn, nhẹ hơn và ít lỗi vùng miền hơn
+    # Sử dụng gemini-1.5-flash: Nhanh hơn, nhẹ hơn và ít lỗi vùng mi
     model = genai.GenerativeModel(
         model_name='gemini-1.5-flash', 
         safety_settings=[
