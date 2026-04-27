@@ -4,9 +4,10 @@ import google.generativeai as genai
 import os
 
 # Cấu hình Gemini
-genai.configure(api_key=os.environ.get("GEMINI_KEY"))
+api_key = os.environ.get("GEMINI_KEY")
+genai.configure(api_key=api_key)
 
-# ÉP BUỘC dùng gemini-1.5-flash để không bị lỗi 404
+# Dùng model Flash cho nhẹ và chuẩn 2026
 model = genai.GenerativeModel(
     model_name='gemini-1.5-flash',
     safety_settings=[
@@ -33,20 +34,23 @@ class AIChat(commands.Cog):
         if is_mentioned or is_in_target_channel:
             async with message.channel.typing():
                 try:
-                    prompt = message.content.replace(f'<@!{self.bot.user.id}>', '').replace(f'<@{self.bot.user.id}>', '').strip()
-                    if not prompt: prompt = "Chào bạn!"
+                    # Lấy nội dung và xóa tag bot
+                    content = message.content.replace(f'<@!{self.bot.user.id}>', '').replace(f'<@{self.bot.user.id}>', '').strip()
+                    if not content: content = "Chào bot"
 
-                    # Gọi AI
-                    response = model.generate_content(prompt)
+                    response = model.generate_content(content)
                     
                     if response.text:
                         await message.reply(response.text)
+                        
+                        # Gửi log vào kênh riêng
+                        log_chan = self.bot.get_channel(self.log_channel_id)
+                        if log_chan:
+                            await log_chan.send(f"**User:** {message.author}\n**Hỏi:** {content}\n**Bot:** {response.text[:500]}")
                     else:
-                        await message.reply("🛡️ Nội dung bị chặn do chính sách an toàn.")
-
+                        await message.reply("🛡️ AI từ chối phản hồi do chính sách nội dung.")
                 except Exception as e:
-                    print(f"Lỗi AI: {e}")
-                    # Hiện lỗi thật ra Discord để ông nhìn cho rõ
+                    print(f"Lỗi: {e}")
                     await message.reply(f"❌ Lỗi: `{str(e)[:100]}`")
 
 def setup(bot):
