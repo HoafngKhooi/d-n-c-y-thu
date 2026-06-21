@@ -28,18 +28,34 @@ local function RefreshPlayerList()
     return list
 end
 
+-- Cập nhật lại phần khai báo Dropdown
 local Dropdown = Tab:CreateDropdown({
     Name = "Chọn mục tiêu",
-    Options = RefreshPlayerList(),
+    Options = {"Đang tải..."}, -- Khởi tạo giá trị mặc định để tránh lỗi rỗng
+    CurrentOption = nil,
     Callback = function(Option)
-        TargetPlayer = Players:FindFirstChild(Option)
+        -- Kiểm tra xem Option có phải là string không trước khi dùng
+        if type(Option) == "string" then
+            TargetPlayer = Players:FindFirstChild(Option)
+        end
     end,
 })
 
+-- Hàm làm mới (Fix lỗi table)
+local function UpdateDropdown()
+    local newList = RefreshPlayerList()
+    if #newList > 0 then
+        Dropdown:Refresh(newList, true) -- Cập nhật danh sách mới
+    else
+        Dropdown:Refresh({"Không tìm thấy ai"}, false) -- Tránh truyền table trống
+    end
+end
+
+-- Thay đổi Nút cập nhật thành:
 Tab:CreateButton({
     Name = "Cập nhật danh sách",
     Callback = function()
-        Dropdown:Refresh(RefreshPlayerList(), true)
+        UpdateDropdown()
     end,
 })
 
