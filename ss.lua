@@ -51,21 +51,24 @@ Tab:CreateToggle({
     end,
 })
 
--- Cơ chế đi theo tọa độ chính xác
 RunService.Heartbeat:Connect(function()
     if IsFollowing and TargetPlayer and TargetPlayer.Character then
         local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
         local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         
         if targetRoot and myRoot then
-            -- Tọa độ đích là tọa độ của người chơi kia
-            -- Bạn có thể cộng thêm Vector3.new(0, 2, 0) nếu muốn đứng trên đầu họ
-            -- Hoặc cộng thêm khoảng cách để đứng cạnh bên
-            local targetCFrame = targetRoot.CFrame * CFrame.new(0, 0, 3) -- Đứng cách 3 studs phía trước mục tiêu
+            -- Tính toán hướng đi tới mục tiêu
+            local direction = (targetRoot.Position - myRoot.Position).Unit
+            local distance = (targetRoot.Position - myRoot.Position).Magnitude
             
-            -- Kỹ thuật "Lerp" (Nội suy) giúp di chuyển mượt mà tới tọa độ đích
-            -- Alpha 0.1 nghĩa là di chuyển 10% quãng đường mỗi khung hình (rất nhanh nhưng không phải teleport)
-            myRoot.CFrame = myRoot.CFrame:Lerp(targetCFrame, 0.1)
+            if distance > 4 then
+                -- Cách 1: Dùng Velocity (tác động lực đẩy nhân vật)
+                -- Cách này giúp nhân vật "lao" tới mục tiêu ngay cả khi bị khóa CFrame
+                myRoot.AssemblyLinearVelocity = direction * 30 -- Số 30 là tốc độ, bạn có thể tăng lên nếu muốn nhanh hơn
+            else
+                -- Khi sát mục tiêu thì dừng lại để không bị đè lên nhau
+                myRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+            end
         end
     end
 end)
