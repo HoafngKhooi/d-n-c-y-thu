@@ -1,67 +1,90 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-    Name = "My Helper Script",
+    Name = "Helper Script - Pro Edition",
     LoadingTitle = "Đang khởi tạo...",
     LoadingSubtitle = "by Gemini",
 })
 
 local Tab = Window:CreateTab("Chức năng chính", nil)
 
--- 1. Biến quản lý
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local LocalPlayer = Players.LocalPlayer
+
 local TargetPlayer = nil
 local IsFollowing = false
 local IsSpammingF = false
 
--- 2. Lấy danh sách người chơi
-local PlayerList = {}
-for _, player in pairs(game.Players:GetPlayers()) do
-    if player.Name ~= game.Players.LocalPlayer.Name then
-        table.insert(PlayerList, player.Name)
+-- Hàm lấy danh sách người chơi
+local function RefreshPlayerList()
+    local list = {}
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer then
+            table.insert(list, player.Name)
+        end
     end
+    return list
 end
 
--- 3. Menu chọn người chơi
 local Dropdown = Tab:CreateDropdown({
-    Name = "Chọn người chơi để theo dõi",
-    Options = PlayerList,
-    CurrentOption = nil,
+    Name = "Chọn mục tiêu",
+    Options = RefreshPlayerList(),
     Callback = function(Option)
-        TargetPlayer = game.Players:FindFirstChild(Option)
+        TargetPlayer = Players:FindFirstChild(Option)
+    end,
+})
+
+Tab:CreateButton({
+    Name = "Cập nhật danh sách",
+    Callback = function()
+        Dropdown:Refresh(RefreshPlayerList(), true)
     end,
 })
 
 Tab:CreateToggle({
-    Name = "Bật/Tắt chế độ Đi theo",
+    Name = "Theo dõi mục tiêu",
     CurrentValue = false,
     Callback = function(Value)
         IsFollowing = Value
     end,
 })
 
--- 4. Cơ chế Đi theo (Cập nhật liên tục)
-game:GetService("RunService").RenderStepped:Connect(function()
-    if IsFollowing and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myChar = game.Players.LocalPlayer.Character
-        if myChar then
-            myChar.HumanoidRootPart.CFrame = TargetPlayer.Character.HumanoidRootPart.CFrame
+-- Cơ chế đi theo (Đã tối ưu)
+RunService.Heartbeat:Connect(function()
+    if IsFollowing and TargetPlayer and TargetPlayer.Character then
+        local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local myChar = LocalPlayer.Character
+        local myHumanoid = myChar and myChar:FindFirstChild("Humanoid")
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        
+        if targetRoot and myHumanoid and myRoot then
+            local distance = (myRoot.Position - targetRoot.Position).Magnitude
+            if distance > 6 then -- Khoảng cách tối thiểu 6 studs
+                myHumanoid:MoveTo(targetRoot.Position)
+            else
+                myHumanoid:MoveTo(myRoot.Position) -- Dừng lại nếu đã đủ gần
+            end
         end
     end
 end)
 
--- 5. Cơ chế nhấn phím F liên tục (Giả lập input)
+-- Cơ chế nhấn F (Đã tối ưu)
 Tab:CreateToggle({
-    Name = "Tự động nhấn phím F",
+    Name = "Tự động nhấn F",
     CurrentValue = false,
     Callback = function(Value)
         IsSpammingF = Value
-        task.spawn(function()
-            while IsSpammingF do
-                game:GetService("VirtualInputManager"):SendKeyEvent(true, Enum.KeyCode.F, false, game)
-                task.wait(0.1) -- Thời gian nghỉ để tránh bị lag server
-                game:GetService("VirtualInputManager"):SendKeyEvent(false, Enum.KeyCode.F, false, game)
-                task.wait(0.5) -- Tùy chỉnh tốc độ nhấn tại đây
-            end
-        end)
+        if IsSpammingF then
+            task.spawn(function()
+                while IsSpammingF do
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
+                    task.wait(0.1)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
+                    task.wait(math.random(4, 8) / 10) -- Random delay giúp giống người thật hơn
+                end
+            end)
+        end
     end,
 })
