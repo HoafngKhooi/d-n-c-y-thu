@@ -51,23 +51,25 @@ Tab:CreateToggle({
     end,
 })
 
-RunService.Heartbeat:Connect(function()
+-- Cơ chế đi theo "Cưỡng bức" (Dùng Move thay vì MoveTo)
+RunService.RenderStepped:Connect(function()
     if IsFollowing and TargetPlayer and TargetPlayer.Character then
         local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local myChar = LocalPlayer.Character
+        local myHumanoid = myChar and myChar:FindFirstChild("Humanoid")
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
         
-        if targetRoot and myRoot then
-            -- Tính toán hướng đi tới mục tiêu
+        if targetRoot and myHumanoid and myRoot then
             local direction = (targetRoot.Position - myRoot.Position).Unit
             local distance = (targetRoot.Position - myRoot.Position).Magnitude
             
-            if distance > 4 then
-                -- Cách 1: Dùng Velocity (tác động lực đẩy nhân vật)
-                -- Cách này giúp nhân vật "lao" tới mục tiêu ngay cả khi bị khóa CFrame
-                myRoot.AssemblyLinearVelocity = direction * 30 -- Số 30 là tốc độ, bạn có thể tăng lên nếu muốn nhanh hơn
+            -- Nếu khoảng cách > 5, bắt buộc đi tới
+            if distance > 5 then
+                -- Move với hướng và tốc độ (1 là tốc độ tối đa)
+                myHumanoid:Move(direction, false) 
             else
-                -- Khi sát mục tiêu thì dừng lại để không bị đè lên nhau
-                myRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                -- Khi sát mục tiêu thì dừng lại
+                myHumanoid:Move(Vector3.new(0,0,0), false)
             end
         end
     end
