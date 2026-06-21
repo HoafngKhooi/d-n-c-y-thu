@@ -67,25 +67,31 @@ Tab:CreateToggle({
     end,
 })
 
--- Cơ chế đi theo "Cưỡng bức" (Dùng Move thay vì MoveTo)
-RunService.RenderStepped:Connect(function()
-    if IsFollowing and TargetPlayer and TargetPlayer.Character then
-        local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+-- Cơ chế đi theo "Cưỡng bức" (Đã fix lỗi logic)
+RunService.Heartbeat:Connect(function()
+    if IsFollowing and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local myChar = LocalPlayer.Character
-        local myHumanoid = myChar and myChar:FindFirstChild("Humanoid")
         local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local targetRoot = TargetPlayer.Character.HumanoidRootPart
         
-        if targetRoot and myHumanoid and myRoot then
-            local direction = (targetRoot.Position - myRoot.Position).Unit
-            local distance = (targetRoot.Position - myRoot.Position).Magnitude
+        if myRoot then
+            -- 1. Bỏ qua va chạm (Tắt CanCollide)
+            for _, part in pairs(myChar:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
             
-            -- Nếu khoảng cách > 5, bắt buộc đi tới
-            if distance > 5 then
-                -- Move với hướng và tốc độ (1 là tốc độ tối đa)
-                myHumanoid:Move(direction, false) 
-            else
-                -- Khi sát mục tiêu thì dừng lại
-                myHumanoid:Move(Vector3.new(0,0,0), false)
+            -- 2. Di chuyển tới mục tiêu
+            local targetPos = targetRoot.Position + Vector3.new(0, 0, 3)
+            local diff = targetPos - myRoot.Position
+            local distance = diff.Magnitude
+            
+            if distance > 2 then
+                -- Dùng pcall để tránh script bị "crash" nếu game khóa thuộc tính CFrame
+                local success, err = pcall(function()
+                    myRoot.CFrame = myRoot.CFrame + (diff.Unit * 0.5)
+                end)
             end
         end
     end
