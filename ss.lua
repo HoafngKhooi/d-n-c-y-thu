@@ -51,21 +51,21 @@ Tab:CreateToggle({
     end,
 })
 
--- Cơ chế đi theo (Đã tối ưu)
+-- Cơ chế đi theo tọa độ chính xác
 RunService.Heartbeat:Connect(function()
     if IsFollowing and TargetPlayer and TargetPlayer.Character then
         local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local myChar = LocalPlayer.Character
-        local myHumanoid = myChar and myChar:FindFirstChild("Humanoid")
-        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         
-        if targetRoot and myHumanoid and myRoot then
-            local distance = (myRoot.Position - targetRoot.Position).Magnitude
-            if distance > 6 then -- Khoảng cách tối thiểu 6 studs
-                myHumanoid:MoveTo(targetRoot.Position)
-            else
-                myHumanoid:MoveTo(myRoot.Position) -- Dừng lại nếu đã đủ gần
-            end
+        if targetRoot and myRoot then
+            -- Tọa độ đích là tọa độ của người chơi kia
+            -- Bạn có thể cộng thêm Vector3.new(0, 2, 0) nếu muốn đứng trên đầu họ
+            -- Hoặc cộng thêm khoảng cách để đứng cạnh bên
+            local targetCFrame = targetRoot.CFrame * CFrame.new(0, 0, 3) -- Đứng cách 3 studs phía trước mục tiêu
+            
+            -- Kỹ thuật "Lerp" (Nội suy) giúp di chuyển mượt mà tới tọa độ đích
+            -- Alpha 0.1 nghĩa là di chuyển 10% quãng đường mỗi khung hình (rất nhanh nhưng không phải teleport)
+            myRoot.CFrame = myRoot.CFrame:Lerp(targetCFrame, 0.1)
         end
     end
 end)
