@@ -26,6 +26,7 @@ local PathfindingService = game:GetService("PathfindingService") -- SERVICE TÌM
 local LocalPlayer = Players.LocalPlayer
 
 local CurrentRoomIndex = 1
+local LastTargetPos = Vector3.new(0, 0, 0) -- ĐÃ SỬA: Khai báo mốc tọa độ ở đây để tránh lỗi gán giá trị nil
 
 local MapConfig = {
     ["Raided Village"] = {
@@ -51,7 +52,7 @@ local function isValidEnemy(enemyName)
     return nil
 end
 
--- [[ 2.8. HÀM TÌM ĐƯỜNG THÔNG MINH (NÉ MAP BARRIERS) ]]
+-- [[ 2.8. HÀM TÌM ĐƯỜNG THÔNG MINH ĐÃ TỐI ƯU MƯỢT MÀ ]]
 local function walkToTarget(targetPosition)
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChild("Humanoid")
@@ -59,36 +60,36 @@ local function walkToTarget(targetPosition)
     
     if not humanoid or not rootPart then return end
     
-    -- Khởi tạo Path với thông số đại diện cho nhân vật (Agent)
+    -- CƠ CHẾ CHỐNG NHẤP: Nếu mục tiêu dịch chuyển quá ít, đi thẳng luôn cho mượt
+    local distanceMoved = (targetPosition - LastTargetPos).Magnitude
+    if distanceMoved < 5 then
+        humanoid:MoveTo(targetPosition)
+        return
+    end
+    
+    -- Cập nhật lại vị trí mốc mới
+    LastTargetPos = targetPosition
+    
     local path = PathfindingService:CreatePath({
         AgentRadius = 2,
         AgentHeight = 5,
-        AgentCanJump = true -- Cho phép nhảy nếu gặp vật cản thấp
+        AgentCanJump = true
     })
     
-    -- Tính toán đường đi từ vị trí hiện tại đến đích
-    local success, errorMessage = pcall(function()
+    local success, _ = pcall(function()
         path:ComputeAsync(rootPart.Position, targetPosition)
     end)
     
-    -- Nếu tính toán đường đi thành công và đường đi đó hợp lệ (Không bị bít lối)
     if success and path.Status == Enum.PathStatus.Success then
         local waypoints = path:GetWaypoints()
-        
-        -- Lấy điểm di chuyển tiếp theo (Thường là waypoint thứ 2 hoặc 3 để mượt)
         if waypoints and #waypoints > 1 then
             local nextWaypoint = waypoints[2]
-            
-            -- ĐÃ SỬA CHÍNH XÁC: Đổi thành Enum.PathWaypointAction.Jump công thức chuẩn Roblox
             if nextWaypoint.Action == Enum.PathWaypointAction.Jump then
                 humanoid.Jump = true
             end
-            
-            -- Di chuyển đến waypoint đó để né tường vô hình
             humanoid:MoveTo(nextWaypoint.Position)
         end
     else
-        -- Nếu Pathfinding bị lỗi (do quá gần hoặc lag), dùng MoveTo thẳng để chữa cháy
         humanoid:MoveTo(targetPosition)
     end
 end
@@ -96,7 +97,7 @@ end
 -- [[ 3. LOGIC HÀM AUTO FARM ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(0.2) -- Giảm xuống 0.2s để nhân vật cập nhật đường đi liên tục, né tường mượt hơn
+        task.wait(0.15) -- Tốc độ quét luồng logic nhanh hơn nhưng không lo giật vì đã có bộ lọc khoảng cách
         
         local character = LocalPlayer.Character
         local humanoid = character and character:FindFirstChild("Humanoid")
@@ -121,33 +122,27 @@ local function doAutoFarm()
             end
             
             if targetEnemy then
-                -- CÒN QUÁI: Gọi hàm đi thông minh né tường
-                local targetPos = targetEnemy.HumanoidRootPart.Position
-                walkToTarget(targetPos)
-                print("AI đang tìm đường né tường để đấm quái: " .. targetEnemy.Name)
+                -- CÒN QUÁI: Di chuyển thông minh
+                walkToTarget(targetEnemy.HumanoidRootPart.Position)
             else
-                -- HẾT QUÁI: Xử lý Barrier của Room hiện tại để qua màn
+                -- HẾT QUÁI: Xử lý cửa qua màn
                 local roomName = "Room" .. tostring(CurrentRoomIndex)
                 local roomInfo = workspace:FindFirstChild("roomInformation")
                 local currentRoom = roomInfo and roomInfo:FindFirstChild(roomName)
                 local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
                 
-                -- Khi cửa CÒN CHẶN: Dùng Pathfinding để tìm đường đến trước cửa đứng đợi
                 if barrier and barrier:IsA("BasePart") and barrier.Transparency < 0.5 and barrier.CanCollide == true then
-                    walkToTarget(barrier.Position)
-                    print("Hết quái Room " .. CurrentRoomIndex .. "! AI đang tìm đường ra Barrier chờ mở...")
+                    -- Cửa chưa mở: Đi thẳng bằng MoveTo ra cửa đứng đợi (Không cần dùng Pathfinding ở đây để tránh giật)
+                    humanoid:MoveTo(barrier.Position)
                 else
-                    -- Khi cửa ĐÃ MỞ: Ép đi thẳng bằng MoveTo và tăng index phòng an toàn
                     if CurrentRoomIndex < 7 then
-                        print("Barrier " .. roomName .. " đã mở! Ép nhân vật tiến lên Room " .. (CurrentRoomIndex + 1))
-                        
-                        -- Lấy một vị trí xa hơn barrier cũ một chút để nhân vật bước hẳn qua phòng mới
                         if barrier then
                             humanoid:MoveTo(barrier.Position + (rootPart.CFrame.LookVector * 5))
                         end
                         
                         CurrentRoomIndex = CurrentRoomIndex + 1
-                        task.wait(1.5) -- Giữ nguyên thời gian chờ để nhân vật kịp di chuyển qua hẳn phòng mới
+                        LastTargetPos = Vector3.new(0,0,0) -- Reset mốc vị trí để phòng sau quét lại từ đầu
+                        task.wait(1.5) 
                     end
                 end
             end
