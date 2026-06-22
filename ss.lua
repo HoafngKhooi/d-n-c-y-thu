@@ -1,55 +1,88 @@
+-- [[ 1. KHỞI TẠO RAYFIELD UI ]]
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Fabled Legacy - Auto Farm Test",
+   LoadingTitle = "Đang tải Script...",
+   LoadingSubtitle = "by Bạn Chứ Ai",
+   ConfigurationSaving = {
+      Enabled = false
+   },
+   Discord = {
+      Enabled = false
+   },
+   KeySystem = false
+})
+
+-- [[ 2. TẠO CÁC TAB VÀ BIẾN MÔI TRƯỜNG ]]
+local MainTab = Window:CreateTab("Main Farm", 4483362458) -- Icon mặc định
+
+local _G = _G or {}
+_G.AutoFarm = false -- Biến toàn cục để kiểm soát vòng lặp farm
+
+-- Các Service cần thiết
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local CollectionService = game:GetService("CollectionService")
 local LocalPlayer = Players.LocalPlayer
 
-local TargetName = "hoafngkhooi"
-local IsFollowing = true 
-local IsSpammingF = true 
-
-repeat task.wait() until LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
--- [TẮT HỆ THỐNG CỦA GAME]
-for _, object in pairs(CollectionService:GetTagged("Movement")) do
-    CollectionService:RemoveTag(object, "Movement")
+-- [[ 3. LOGIC HÀM AUTO TELEPORT ]]
+local function doAutoFarm()
+    while _G.AutoFarm do
+        task.wait(0.1) -- Khoảng thời gian delay nhỏ để tránh crash game
+        
+        local character = LocalPlayer.Character
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        
+        if rootPart then
+            -- Quét qua tất cả quái trong folder Enemies
+            for _, enemy in pairs(workspace.Enemies:GetChildren()) do
+                -- Kiểm tra xem quái có phải là "Raider Punisher" (hoặc bỏ điều kiện Name nếu muốn farm mọi loại quái)
+                if enemy.Name == "Raider Punisher" and enemy:FindFirstChild("HumanoidRootPart") then
+                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+                    
+                    -- Nếu quái còn sống thì mới bay tới
+                    if humanoid and humanoid.Health > 0 then
+                        -- Dịch chuyển lên trên đầu quái 5 block để test
+                        rootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
+                        break -- Chỉ xử lý 1 con tại 1 thời điểm, xong vòng lặp này sẽ quét tiếp
+                    end
+                end
+            end
+        end
+    end
 end
 
-local function GetTarget()
-    for _, player in pairs(Players:GetPlayers()) do
-        if string.find(string.lower(player.Name), string.lower(TargetName)) or 
-           string.find(string.lower(player.DisplayName), string.lower(TargetName)) then
-            return player
-        end
-    end
-    return nil
-end
+-- [[ 4. THÊM TOGGLE VÀO MENU ]]
+MainTab:CreateToggle({
+   Name = "Auto Teleport To Mob",
+   CurrentValue = false,
+   Flag = "AutoFarmToggle", 
+   Callback = function(Value)
+      _G.AutoFarm = Value -- Gán giá trị true/false từ nút bấm vào biến
+      
+      if Value then
+          -- Nếu bật Toggle thì chạy hàm farm trong một luồng riêng (coroutine) để không làm đơ UI
+          task.spawn(doAutoFarm)
+          Rayfield:Notify({
+             Title = "Auto Farm",
+             Content = "Đã BẬT tự động dịch chuyển!",
+             Duration = 2,
+             Image = 4483362458,
+          })
+      else
+          Rayfield:Notify({
+             Title = "Auto Farm",
+             Content = "Đã TẮT tự động dịch chuyển.",
+             Duration = 2,
+             Image = 4483362458,
+          })
+      end
+   end,
+})
 
-RunService.Heartbeat:Connect(function()
-    if not IsFollowing then return end
-    local TargetPlayer = GetTarget()
-    local myChar = LocalPlayer.Character
-    if TargetPlayer and TargetPlayer.Character and myChar then
-        local myRoot = myChar:FindFirstChild("HumanoidRootPart")
-        local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local myHumanoid = myChar:FindFirstChild("Humanoid")
-        if myRoot and targetRoot and myHumanoid then
-            -- Giờ đây bạn có toàn quyền kiểm soát vì hệ thống game đã bị "tắt"
-            myHumanoid.WalkSpeed = 22
-            myHumanoid:MoveTo(targetRoot.Position)
-        end
-    end
-end)
-
--- Auto F
-task.spawn(function()
-    while true do
-        if IsSpammingF then
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
-            task.wait(0.1)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
-            task.wait(math.random(4, 8) / 10)
-        end
-        task.wait(0.1)
-    end
-end)
+-- Thông báo cho người dùng biết script đã sẵn sàng
+Rayfield:Notify({
+   Title = "Thành Công!",
+   Content = "Menu Rayfield đã load xong, chiến thôi!",
+   Duration = 3,
+   Image = 4483362458,
+})
