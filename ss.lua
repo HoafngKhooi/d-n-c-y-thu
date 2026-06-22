@@ -79,8 +79,8 @@ local function walkToTarget(targetPosition)
         if waypoints and #waypoints > 1 then
             local nextWaypoint = waypoints[2]
             
-            -- Nếu điểm tiếp theo yêu cầu nhảy, nhân vật sẽ nhảy
-            if nextWaypoint.Action == Enum.PathAction.Jump then
+            -- SỬA LỖI TẠI ĐÂY: Thay Enum.PathAction bằng Enum.PathWaypointsAction
+            if nextWaypoint.Action == Enum.Enum.PathWaypointsAction.Jump then
                 humanoid.Jump = true
             end
             
