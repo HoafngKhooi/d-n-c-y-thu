@@ -28,21 +28,25 @@ RunService.Heartbeat:Connect(function()
             local targetPos = targetRoot.Position
             local dist = (myRoot.Position - targetPos).Magnitude
             if dist > 6 then
-                -- 1. Xoay hướng (Giữ nguyên)
+                -- 1. Xoay hướng
                 myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetPos.X, myRoot.Position.Y, targetPos.Z))
                 
-                -- 2. Ép vận tốc vật lý (Lực đẩy) - Cách này thường lách được các lệnh chặn di chuyển
+                -- 2. Kết hợp cả 2 cách di chuyển
                 local dir = (targetPos - myRoot.Position).Unit
-                local speed = 16 -- Tốc độ đi bộ mặc định
+                local speed = 25 -- TĂNG LÊN ĐÂY (thử 25 trước)
+                
+                -- Đẩy vận tốc
                 myRoot.AssemblyLinearVelocity = Vector3.new(dir.X * speed, myRoot.AssemblyLinearVelocity.Y, dir.Z * speed)
+                -- Ép thêm Humanoid di chuyển (tránh bị anti-cheat soi)
+                myHumanoid:Move(dir, true)
                 
                 -- 3. Chống kẹt
                 if myHumanoid.MoveDirection.Magnitude == 0 and dist > 6 then 
                     myHumanoid.Jump = true 
                 end
             else
-                -- Khi đến gần, dừng lực đẩy
-                myRoot.AssemblyLinearVelocity = Vector3.new(0, myRoot.AssemblyLinearVelocity.Y, 0)
+                -- Khi đến gần, dừng hẳn
+                myRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 myHumanoid:Move(Vector3.new(0,0,0), false)
             end
         end
