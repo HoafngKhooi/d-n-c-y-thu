@@ -22,8 +22,7 @@ local PathfindingService = game:GetService("PathfindingService")
 local LocalPlayer = Players.LocalPlayer
 
 local CurrentRoomIndex = 1
-local LastTargetPos = Vector3.new(0, 0, 0)
-local isMoving = false -- Biến khóa chống spam lệnh di chuyển gây nhấp chân
+local TargetEnemy = nil -- Lưu trữ mục tiêu hiện tại để không quét lại liên tục
 
 local MapConfig = {
     ["Raided Village"] = {
@@ -47,23 +46,21 @@ local function isValidEnemy(enemyName)
     return nil
 end
 
--- [[ 2.8. HÀM TÌM ĐƯỜNG THÔNG MINH KHÔNG BỊ GIẬT NHẤP CHÂN ]]
-local function walkToTarget(targetPosition)
+-- [[ 2.8. HÀM TÌM ĐƯỜNG ĐI MỘT MẠCH (ĐÃ KHỬ KHỰNG KHHI ĐUỔI QUÁI) ]]
+local function moveToTargetSmooth(targetPart)
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChild("Humanoid")
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     
-    if not humanoid or not rootPart then return end
+    if not humanoid or not rootPart or not targetPart then return end
     
-    -- Nếu đang di chuyển và quái di chuyển ít (< 6 studs), bỏ qua không tính lại để tránh giật
-    local distanceMoved = (targetPosition - LastTargetPos).Magnitude
-    if isMoving and distanceMoved < 6 then
+    -- TỐI ƯU CỐT LÕI: Nếu đã ở rất gần quái (dưới 12 studs), đi thẳng bằng MoveTo luôn, không thèm gọi Pathfinding nữa cho đỡ giật
+    local distanceToTarget = (rootPart.Position - targetPart.Position).Magnitude
+    if distanceToTarget < 12 then
+        humanoid:MoveTo(targetPart.Position)
         return
     end
     
-    LastTargetPos = targetPosition
-    
-    -- Tính toán đường đi mới
     local path = PathfindingService:CreatePath({
         AgentRadius = 2,
         AgentHeight = 5,
@@ -71,87 +68,102 @@ local function walkToTarget(targetPosition)
     })
     
     local success, _ = pcall(function()
-        path:ComputeAsync(rootPart.Position, targetPosition)
+        path:ComputeAsync(rootPart.Position, targetPart.Position)
     end)
     
     if success and path.Status == Enum.PathStatus.Success then
         local waypoints = path:GetWaypoints()
-        
-        -- Kích hoạt luồng chạy mượt đơn lẻ
         if waypoints and #waypoints > 1 then
-            task.spawn(function()
-                isMoving = true
-                -- Chỉ đi 2-3 điểm tiếp theo thay vì đi hết cả map để cập nhật mục tiêu nhạy hơn
-                local maxPoints = math.min(#waypoints, 4) 
-                for i = 2, maxPoints do
-                    if not _G.AutoFarm or (LastTargetPos - targetPosition).Magnitude > 6 then break end
-                    
-                    local waypoint = waypoints[i]
-                    if waypoint.Action == Enum.PathWaypointAction.Jump then
-                        humanoid.Jump = true
-                    end
-                    
-                    humanoid:MoveTo(waypoint.Position)
-                    -- Đợi nhân vật di chuyển gần tới điểm hiện tại rồi mới đi điểm tiếp theo (Tránh nhấp chân)
-                    humanoid.MoveToFinished:Wait() 
-                end
-                isMoving = false
-            end)
+            -- Chỉ lấy đúng điểm thứ 2 để di chuyển bước đệm hướng né tường
+            local waypoint = waypoints[2]
+            if waypoint.Action == Enum.PathWaypointAction.Jump then
+                humanoid.Jump = true
+            end
+            humanoid:MoveTo(waypoint.Position)
         end
     else
-        -- Chữa cháy nếu lỗi Pathfinding
-        humanoid:MoveTo(targetPosition)
+        humanoid:MoveTo(targetPart.Position)
     end
 end
 
--- [[ 3. LOGIC HÀM AUTO FARM ]]
+-- [[ 3. LOGIC HÀM AUTO FARM TỐI ƯU QUÉT 1 LẦN ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(0.15)
+        task.wait(0.05) -- Tốc độ phản hồi cực nhanh nhưng không gây lag vì có khóa Target
         
         local character = LocalPlayer.Character
         local humanoid = character and character:FindFirstChild("Humanoid")
         local rootPart = character and character:FindFirstChild("HumanoidRootPart")
         
         if humanoid and rootPart then
-            local targetEnemy = nil
+            -- BƯỚC 1: KIỂM TRA MỤC TIÊU CŨ (Nếu quái cũ còn sống thì tiếp tục đi đấm, không quét lại)
+            if TargetEnemy and TargetEnemy:FindFirstChild("HumanoidRootPart") then
+                local eHumanoid = TargetEnemy:FindFirstChildOfClass("Humanoid")
+                if eHumanoid and eHumanoid.Health > 0 then
+                    moveToTargetSmooth(TargetEnemy.HumanoidRootPart)
+                    continue -- Bỏ qua đoạn dưới, giữ nguyên mục tiêu này
+                end
+            end
+            
+           -- BƯỚC 2: QUÉT QUÁI MỚI (Tối ưu tuyệt đối cho mọi loại Map lớn nhỏ)
+            TargetEnemy = nil
             local highestPriority = 999 
+            
+            -- Lấy vị trí của cửa chặn phòng hiện tại (nếu có) để làm mốc giới hạn
+            local roomName = "Room" .. tostring(CurrentRoomIndex)
+            local roomInfo = workspace:FindFirstChild("roomInformation")
+            local currentRoom = roomInfo and roomInfo:FindFirstChild(roomName)
+            local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
             
             for _, enemy in pairs(workspace.Enemies:GetChildren()) do
                 if enemy:FindFirstChild("HumanoidRootPart") then
                     local eHumanoid = enemy:FindFirstChildOfClass("Humanoid")
-                    
                     if eHumanoid and eHumanoid.Health > 0 then
-                        local priority = isValidEnemy(enemy.Name)
-                        if priority and priority < highestPriority then
-                            highestPriority = priority
-                            targetEnemy = enemy
+                        
+                        -- BIỆN PHÁP CHỐNG QUÉT XUYÊN PHÒNG:
+                        -- Nếu phòng có cửa chặn, và quái nằm ĐẰNG SAU cái cửa đó (khoảng cách từ nhân vật tới quái lớn hơn khoảng cách tới cửa) -> Bỏ qua quái đó!
+                        local distToEnemy = (rootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+                        local canAttack = true
+                        
+                        if barrier and barrier:IsA("BasePart") and barrier.CanCollide == true then
+                            local distToBarrier = (rootPart.Position - barrier.Position).Magnitude
+                            if distToEnemy > distToBarrier + 10 then 
+                                canAttack = false -- Quái này thuộc phòng sau rồi, không thèm quét!
+                            end
+                        end
+                        
+                        -- Nếu quái hợp lệ hoặc map mở (để khoảng cách tối đa là 350 cho an toàn)
+                        if canAttack and distToEnemy < 350 then 
+                            local priority = isValidEnemy(enemy.Name)
+                            if priority and priority < highestPriority then
+                                highestPriority = priority
+                                TargetEnemy = enemy
+                            end
                         end
                     end
                 end
             end
             
-            if targetEnemy then
-                walkToTarget(targetEnemy.HumanoidRootPart.Position)
-            else
-                -- HẾT QUÁI: Xử lý cửa qua màn
-                isMoving = false -- Giải phóng khóa di chuyển khi hết quái
+            -- BƯỚC 3: XỬ LÝ KHI HẾT QUÁI (CHUYỂN ROOM)
+            if not TargetEnemy then
                 local roomName = "Room" .. tostring(CurrentRoomIndex)
                 local roomInfo = workspace:FindFirstChild("roomInformation")
                 local currentRoom = roomInfo and roomInfo:FindFirstChild(roomName)
                 local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
                 
                 if barrier and barrier:IsA("BasePart") and barrier.Transparency < 0.5 and barrier.CanCollide == true then
+                    -- Cửa chưa mở: Tiến ra đứng sát cửa chờ
                     humanoid:MoveTo(barrier.Position)
                 else
+                    -- Cửa mở: Ép bước sâu qua phòng mới
                     if CurrentRoomIndex < 7 then
                         if barrier then
-                            humanoid:MoveTo(barrier.Position + (rootPart.CFrame.LookVector * 5))
+                            humanoid:MoveTo(barrier.Position + (rootPart.CFrame.LookVector * 15)) -- Đi sâu vào trong 15 studs
                         end
                         
-                        CurrentRoomIndex = CurrentRoomIndex + 1
-                        LastTargetPos = Vector3.new(0,0,0)
-                        task.wait(1.5) 
+                        -- SỬA TẠI ĐÂY: Chờ nhân vật ổn định vị trí và quái phòng mới kịp spawn trước khi tăng mã phòng
+                        task.wait(2.5) 
+                        CurrentRoomIndex = CurrentRoomIndex + 1 
                     end
                 end
             end
@@ -169,17 +181,16 @@ MainTab:CreateToggle({
       
       if Value then
           CurrentRoomIndex = 1 
-          LastTargetPos = Vector3.new(0, 0, 0)
-          isMoving = false
+          TargetEnemy = nil -- Xóa mục tiêu cũ khi khởi động lại
           task.spawn(doAutoFarm)
           Rayfield:Notify({
              Title = "Auto Farm",
-             Content = "Đã BẬT tự động chạy mượt mà không nhấp chân!",
+             Content = "Đã bật hệ thống Auto Farm mượt không gián đoạn!",
              Duration = 2,
              Image = 4483362458,
           })
       else
-          isMoving = false
+          TargetEnemy = nil
           Rayfield:Notify({
              Title = "Auto Farm",
              Content = "Đã TẮT tự động di chuyển.",
@@ -193,7 +204,7 @@ MainTab:CreateToggle({
 -- Thông báo sẵn sàng
 Rayfield:Notify({
    Title = "Thành Công!",
-   Content = "Đã sửa hoàn toàn lỗi nhấp chân di chuyển!",
+   Content = "Đã cập nhật thuật toán khóa mục tiêu mượt mà!",
    Duration = 3,
    Image = 4483362458,
 })
