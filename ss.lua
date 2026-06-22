@@ -67,32 +67,21 @@ Tab:CreateToggle({
     end,
 })
 
--- Cơ chế đi theo "Cưỡng bức" (Đã fix lỗi logic)
 RunService.Heartbeat:Connect(function()
     if IsFollowing and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myChar = LocalPlayer.Character
-        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         local targetRoot = TargetPlayer.Character.HumanoidRootPart
         
         if myRoot then
-            -- 1. Bỏ qua va chạm (Tắt CanCollide)
-            for _, part in pairs(myChar:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CanCollide = false
-                end
-            end
+            -- Tính hướng hút
+            local direction = (targetRoot.Position - myRoot.Position).Unit
             
-            -- 2. Di chuyển tới mục tiêu
-            local targetPos = targetRoot.Position + Vector3.new(0, 0, 3)
-            local diff = targetPos - myRoot.Position
-            local distance = diff.Magnitude
+            -- Ép vận tốc liên tục. Cách này server sẽ thấy nhân vật đang "trượt" đi 
+            -- chứ không phải đang bị thay đổi tọa độ bất hợp pháp.
+            myRoot.AssemblyLinearVelocity = direction * 50 
             
-            if distance > 2 then
-                -- Dùng pcall để tránh script bị "crash" nếu game khóa thuộc tính CFrame
-                local success, err = pcall(function()
-                    myRoot.CFrame = myRoot.CFrame + (diff.Unit * 0.5)
-                end)
-            end
+            -- Đảm bảo không bị bay lên trời
+            myRoot.AssemblyAngularVelocity = Vector3.new(0,0,0)
         end
     end
 end)
