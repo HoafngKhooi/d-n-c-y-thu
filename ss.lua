@@ -22,25 +22,29 @@ RunService.RenderStepped:Connect(function()
     local myHumanoid = myChar:FindFirstChild("Humanoid")
     
     if myRoot and targetRoot and myHumanoid then
-        -- 1. Tính toán vị trí "Sau lưng" (Offset)
-        -- Nhân vật đứng sau lưng đối phương 3 stud
+        -- 1. Tính toán vị trí SAU LƯNG mục tiêu 3 stud
         local offset = targetRoot.CFrame.LookVector * -3 
-        local behindPos = targetRoot.Position + offset
+        local targetBehind = targetRoot.Position + offset
         
-        -- 2. Khóa góc nhìn vào đối phương
+        -- 2. Ép Camera nhìn về mục tiêu
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetRoot.Position)
         
-        -- 3. Ép tốc độ
-        if myHumanoid.WalkSpeed < 24 then myHumanoid.WalkSpeed = 24 end
-        
-        -- 4. Di chuyển bám theo vị trí bù (behindPos)
-        local dist = (myRoot.Position - behindPos).Magnitude
-        if dist > 2 then -- Chỉ đi khi khoảng cách lớn hơn 2 stud để tránh bị rung giật
+        -- 3. Bám sát bằng CFrame (Di chuyển cực nhanh và chuẩn)
+        local dist = (myRoot.Position - targetBehind).Magnitude
+        if dist > 1 then -- Nếu cách quá 1 stud là bám ngay
+            -- Xoay nhân vật về hướng mục tiêu
             myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
-            myHumanoid:MoveTo(behindPos)
-        else
-            myHumanoid:MoveTo(myRoot.Position)
+            
+            -- Ép nhân vật nhích về phía vị trí sau lưng mục tiêu
+            local direction = (targetBehind - myRoot.Position).Unit
+            myRoot.CFrame = myRoot.CFrame + (direction * 0.5)
+            
+            -- Gọi Move để giữ Animation
+            myHumanoid:Move(direction, true)
         end
+        
+        -- 4. Ép tốc độ chạy (chỉ để đảm bảo không bị khựng)
+        if myHumanoid.WalkSpeed < 26 then myHumanoid.WalkSpeed = 26 end
     end
 end)
 
