@@ -2,18 +2,15 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
 
 local TargetName = "hoafngkhooi"
 local IsFollowing = true 
 local IsSpammingF = true 
 
--- Chờ character sẵn sàng
 repeat task.wait() until LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
 local function GetTarget()
     for _, player in pairs(Players:GetPlayers()) do
-        -- Kiểm tra cả Name (Username) và DisplayName
         if string.find(string.lower(player.Name), string.lower(TargetName)) or 
            string.find(string.lower(player.DisplayName), string.lower(TargetName)) then
             return player
@@ -25,7 +22,7 @@ end
 RunService.Heartbeat:Connect(function()
     if not IsFollowing then return end
     
-    local TargetPlayer = GetTarget() -- Dùng hàm tìm kiếm thông minh
+    local TargetPlayer = GetTarget()
     local myChar = LocalPlayer.Character
     
     if TargetPlayer and TargetPlayer.Character and myChar then
@@ -34,24 +31,28 @@ RunService.Heartbeat:Connect(function()
         local myHumanoid = myChar:FindFirstChild("Humanoid")
         
         if myRoot and targetRoot and myHumanoid then
-            -- Tăng WalkSpeed nhẹ nhàng (22 là mức an toàn tuyệt đối cho mọi game)
+            -- Ép tốc độ nhẹ nhàng
             if myHumanoid.WalkSpeed < 22 then myHumanoid.WalkSpeed = 22 end
             
-            -- Tính khoảng cách
             local dist = (myRoot.Position - targetRoot.Position).Magnitude
             
-            -- Chỉ di chuyển nếu cách xa quá 8 stud (khoảng cách đi bộ mặc định)
+            -- Xoay mặt về phía mục tiêu để di chuyển đúng hướng
+            myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
+            
             if dist > 8 then
+                -- Bám theo bằng cách giả lập phím W
+                VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
                 myHumanoid:MoveTo(targetRoot.Position)
             else
-                -- Khi đã gần, không gọi MoveTo liên tục để tránh bị "trượt"
+                -- Dừng phím W khi đã đến gần
+                VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
                 myHumanoid:MoveTo(myRoot.Position)
             end
         end
     end
 end)
 
--- Auto F giữ nguyên
+-- Auto F 
 task.spawn(function()
     while true do
         if IsSpammingF then
