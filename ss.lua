@@ -1,4 +1,4 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+Local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -7,97 +7,58 @@ local LocalPlayer = Players.LocalPlayer
 local Window = Rayfield:CreateWindow({Name = "Helper Script - Pro Edition", LoadingTitle = "Khởi tạo...", LoadingSubtitle = "by Gemini"})
 local Tab = Window:CreateTab("Chức năng chính", nil)
 
-local TargetPlayer = nil
+local TargetName = "hoafngkhooi" -- Tên người bạn muốn bám theo cố định
 local IsFollowing = false
 local IsSpammingF = false
 
--- Hàm lấy danh sách người chơi
-local function RefreshPlayerList()
-    local list = {}
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            table.insert(list, player.Name)
-        end
-    end
-    return list
-end
-
--- Hàm hỗ trợ
+-- Hàm nhấn phím
 local function PressKey(key, state) VirtualInputManager:SendKeyEvent(state, key, false, game) end
 
--- Logic RenderStepped đã tối ưu (Thêm cơ chế chống kẹt)
-RunService.RenderStepped:Connect(function()
-    if IsFollowing and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myChar = LocalPlayer.Character
-        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+-- Logic bám theo cố định
+RunService.Heartbeat:Connect(function()
+    if not IsFollowing then 
+        PressKey(Enum.KeyCode.W, false) -- Thả phím W khi tắt Follow
+        return 
+    end
+    
+    local TargetPlayer = Players:FindFirstChild(TargetName)
+    local myChar = LocalPlayer.Character
+        
+    if TargetPlayer and TargetPlayer.Character and myChar then
+        local myRoot = myChar:FindFirstChild("HumanoidRootPart")
         local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local myHumanoid = myChar and myChar:FindFirstChild("Humanoid")
-
+        local myHumanoid = myChar:FindFirstChild("Humanoid")
+        
         if myRoot and targetRoot and myHumanoid then
-            -- 1. Bật xuyên người (Tắt va chạm với người chơi khác) để đi theo không bị đẩy
+            -- 1. Bật xuyên người
             for _, part in pairs(myChar:GetChildren()) do
                 if part:IsA("BasePart") then part.CanCollide = false end
             end
-
-            -- 2. Xoay và Di chuyển
-            local targetPos = targetRoot.Position
-            local lookAt = CFrame.new(myRoot.Position, Vector3.new(targetPos.X, myRoot.Position.Y, targetPos.Z))
-            myRoot.CFrame = myRoot.CFrame:Lerp(lookAt, 0.2)
-
-            local distance = (myRoot.Position - targetPos).Magnitude
             
-            -- Thay phần if distance > 6 ở trên thành:
-            if distance > 6 then
-                PressKey(Enum.KeyCode.W, true)
+            -- 2. Tính toán và di chuyển
+            local targetPos = targetRoot.Position
+            local dist = (myRoot.Position - targetPos).Magnitude
+            
+            if dist > 6 then
+                -- Xoay hướng
+                myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetPos.X, myRoot.Position.Y, targetPos.Z))
+                -- Di chuyển
+                local dir = (targetPos - myRoot.Position).Unit
+                myHumanoid:Move(dir, true)
+                -- Chống kẹt
                 if myHumanoid.MoveDirection.Magnitude == 0 then myHumanoid.Jump = true end
             else
-                PressKey(Enum.KeyCode.W, false)
-                -- Khi đủ gần, xóa lực di chuyển để nhân vật đứng yên thay vì trôi
-                myRoot.AssemblyLinearVelocity = Vector3.new(0,0,0) 
+                myHumanoid:Move(Vector3.new(0,0,0), false)
             end
         end
-    else
-        PressKey(Enum.KeyCode.W, false)
     end
 end)
 
--- Cập nhật lại phần khai báo Dropdown
-local Dropdown = Tab:CreateDropdown({
-    Name = "Chọn mục tiêu",
-    Options = {"Đang tải..."}, -- Khởi tạo giá trị mặc định để tránh lỗi rỗng
-    CurrentOption = nil,
-    Callback = function(Option)
-        -- Kiểm tra xem Option có phải là string không trước khi dùng
-        if type(Option) == "string" then
-            TargetPlayer = Players:FindFirstChild(Option)
-        end
-    end,
-})
-
--- Hàm làm mới (Fix lỗi table)
-local function UpdateDropdown()
-    local newList = RefreshPlayerList()
-    if #newList > 0 then
-        Dropdown:Refresh(newList, true) -- Cập nhật danh sách mới
-    else
-        Dropdown:Refresh({"Không tìm thấy ai"}, false) -- Tránh truyền table trống
-    end
-end
-
--- Thay đổi Nút cập nhật thành:
-Tab:CreateButton({
-    Name = "Cập nhật danh sách",
-    Callback = function()
-        UpdateDropdown()
-    end,
-})
-
+-- Giao diện đơn giản hóa
 Tab:CreateToggle({
-    Name = "Theo dõi mục tiêu",
+    Name = "Theo dõi hoafngkhooi",
     CurrentValue = false,
-    Callback = function(Value)
-        IsFollowing = Value
-    end,
+    Callback = function(Value) IsFollowing = Value end,
 })
 
 -- Cơ chế nhấn F (Đã tối ưu)
