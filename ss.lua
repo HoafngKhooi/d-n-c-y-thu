@@ -24,27 +24,37 @@ _G.AutoFarm = false -- Biến toàn cục để kiểm soát vòng lặp farm
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- [[ 3. LOGIC HÀM AUTO TELEPORT ]]
+-- [[ 3. LOGIC HÀM AUTO FARM (MOVE TO) ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(0.1) -- Khoảng thời gian delay nhỏ để tránh crash game
+        task.wait(0.5) -- Tăng thời gian chờ một chút để tránh spam lệnh liên tục làm nhân vật bị khựng
         
         local character = LocalPlayer.Character
         local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+        local humanoid = character and character:FindFirstChild("Humanoid")
         
-        if rootPart then
-            -- Quét qua tất cả quái trong folder Enemies
+        if rootPart and humanoid then
+            local targetEnemy = nil
+            
+            -- Tìm quái gần nhất (hoặc bất kỳ con nào còn sống)
             for _, enemy in pairs(workspace.Enemies:GetChildren()) do
-                -- Kiểm tra xem quái có phải là "Raider Punisher" (hoặc bỏ điều kiện Name nếu muốn farm mọi loại quái)
                 if enemy.Name == "Raider Punisher" and enemy:FindFirstChild("HumanoidRootPart") then
-                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
-                    
-                    -- Nếu quái còn sống thì mới bay tới
-                    if humanoid and humanoid.Health > 0 then
-                        -- Dịch chuyển lên trên đầu quái 5 block để test
-                        rootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 5, 0)
-                        break -- Chỉ xử lý 1 con tại 1 thời điểm, xong vòng lặp này sẽ quét tiếp
+                    local eHumanoid = enemy:FindFirstChildOfClass("Humanoid")
+                    if eHumanoid and eHumanoid.Health > 0 then
+                        targetEnemy = enemy
+                        break 
                     end
+                end
+            end
+            
+            -- Nếu tìm thấy quái thì di chuyển tới
+            if targetEnemy then
+                humanoid:MoveTo(targetEnemy.HumanoidRootPart.Position)
+                
+                -- Tùy chọn: Nếu muốn dừng lại khi đã đủ gần (ví dụ cách 5 đơn vị)
+                local distance = (rootPart.Position - targetEnemy.HumanoidRootPart.Position).Magnitude
+                if distance < 5 then
+                    humanoid:MoveTo(rootPart.Position) -- Dừng di chuyển
                 end
             end
         end
