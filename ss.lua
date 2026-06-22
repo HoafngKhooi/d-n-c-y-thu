@@ -5,12 +5,8 @@ local Window = Rayfield:CreateWindow({
    Name = "Fabled Legacy - Auto Farm Test",
    LoadingTitle = "Đang tải Script...",
    LoadingSubtitle = "by Bạn Chứ Ai",
-   ConfigurationSaving = {
-      Enabled = false
-   },
-   Discord = {
-      Enabled = false
-   },
+   ConfigurationSaving = { Enabled = false },
+   Discord = { Enabled = false },
    KeySystem = false
 })
 
@@ -22,11 +18,12 @@ _G.AutoFarm = false
 
 -- Các Service cần thiết
 local Players = game:GetService("Players")
-local PathfindingService = game:GetService("PathfindingService") -- SERVICE TÌM ĐƯỜNG NÉ TƯỜNG
+local PathfindingService = game:GetService("PathfindingService")
 local LocalPlayer = Players.LocalPlayer
 
 local CurrentRoomIndex = 1
-local LastTargetPos = Vector3.new(0, 0, 0) -- ĐÃ SỬA: Khai báo mốc tọa độ ở đây để tránh lỗi gán giá trị nil
+local LastTargetPos = Vector3.new(0, 0, 0)
+local isMoving = false -- Biến khóa chống spam lệnh di chuyển gây nhấp chân
 
 local MapConfig = {
     ["Raided Village"] = {
@@ -45,14 +42,12 @@ local function isValidEnemy(enemyName)
     if not mobList then return nil end
     
     for index, name in ipairs(mobList) do
-        if enemyName == name then
-            return index
-        end
+        if enemyName == name then return index end
     end
     return nil
 end
 
--- [[ 2.8. HÀM TÌM ĐƯỜNG THÔNG MINH ĐÃ TỐI ƯU MƯỢT MÀ ]]
+-- [[ 2.8. HÀM TÌM ĐƯỜNG THÔNG MINH KHÔNG BỊ GIẬT NHẤP CHÂN ]]
 local function walkToTarget(targetPosition)
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChild("Humanoid")
@@ -60,16 +55,15 @@ local function walkToTarget(targetPosition)
     
     if not humanoid or not rootPart then return end
     
-    -- CƠ CHẾ CHỐNG NHẤP: Nếu mục tiêu dịch chuyển quá ít, đi thẳng luôn cho mượt
+    -- Nếu đang di chuyển và quái di chuyển ít (< 6 studs), bỏ qua không tính lại để tránh giật
     local distanceMoved = (targetPosition - LastTargetPos).Magnitude
-    if distanceMoved < 5 then
-        humanoid:MoveTo(targetPosition)
+    if isMoving and distanceMoved < 6 then
         return
     end
     
-    -- Cập nhật lại vị trí mốc mới
     LastTargetPos = targetPosition
     
+    -- Tính toán đường đi mới
     local path = PathfindingService:CreatePath({
         AgentRadius = 2,
         AgentHeight = 5,
@@ -82,14 +76,30 @@ local function walkToTarget(targetPosition)
     
     if success and path.Status == Enum.PathStatus.Success then
         local waypoints = path:GetWaypoints()
+        
+        -- Kích hoạt luồng chạy mượt đơn lẻ
         if waypoints and #waypoints > 1 then
-            local nextWaypoint = waypoints[2]
-            if nextWaypoint.Action == Enum.PathWaypointAction.Jump then
-                humanoid.Jump = true
-            end
-            humanoid:MoveTo(nextWaypoint.Position)
+            task.spawn(function()
+                isMoving = true
+                -- Chỉ đi 2-3 điểm tiếp theo thay vì đi hết cả map để cập nhật mục tiêu nhạy hơn
+                local maxPoints = math.min(#waypoints, 4) 
+                for i = 2, maxPoints do
+                    if not _G.AutoFarm or (LastTargetPos - targetPosition).Magnitude > 6 then break end
+                    
+                    local waypoint = waypoints[i]
+                    if waypoint.Action == Enum.PathWaypointAction.Jump then
+                        humanoid.Jump = true
+                    end
+                    
+                    humanoid:MoveTo(waypoint.Position)
+                    -- Đợi nhân vật di chuyển gần tới điểm hiện tại rồi mới đi điểm tiếp theo (Tránh nhấp chân)
+                    humanoid.MoveToFinished:Wait() 
+                end
+                isMoving = false
+            end)
         end
     else
+        -- Chữa cháy nếu lỗi Pathfinding
         humanoid:MoveTo(targetPosition)
     end
 end
@@ -97,7 +107,7 @@ end
 -- [[ 3. LOGIC HÀM AUTO FARM ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(0.15) -- Tốc độ quét luồng logic nhanh hơn nhưng không lo giật vì đã có bộ lọc khoảng cách
+        task.wait(0.15)
         
         local character = LocalPlayer.Character
         local humanoid = character and character:FindFirstChild("Humanoid")
@@ -122,17 +132,16 @@ local function doAutoFarm()
             end
             
             if targetEnemy then
-                -- CÒN QUÁI: Di chuyển thông minh
                 walkToTarget(targetEnemy.HumanoidRootPart.Position)
             else
                 -- HẾT QUÁI: Xử lý cửa qua màn
+                isMoving = false -- Giải phóng khóa di chuyển khi hết quái
                 local roomName = "Room" .. tostring(CurrentRoomIndex)
                 local roomInfo = workspace:FindFirstChild("roomInformation")
                 local currentRoom = roomInfo and roomInfo:FindFirstChild(roomName)
                 local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
                 
                 if barrier and barrier:IsA("BasePart") and barrier.Transparency < 0.5 and barrier.CanCollide == true then
-                    -- Cửa chưa mở: Đi thẳng bằng MoveTo ra cửa đứng đợi (Không cần dùng Pathfinding ở đây để tránh giật)
                     humanoid:MoveTo(barrier.Position)
                 else
                     if CurrentRoomIndex < 7 then
@@ -141,7 +150,7 @@ local function doAutoFarm()
                         end
                         
                         CurrentRoomIndex = CurrentRoomIndex + 1
-                        LastTargetPos = Vector3.new(0,0,0) -- Reset mốc vị trí để phòng sau quét lại từ đầu
+                        LastTargetPos = Vector3.new(0,0,0)
                         task.wait(1.5) 
                     end
                 end
@@ -159,15 +168,18 @@ MainTab:CreateToggle({
       _G.AutoFarm = Value 
       
       if Value then
-          CurrentRoomIndex = 1 -- <--- THÊM DÒNG NÀY (Bảo hiểm reset phòng về 1 khi bật farm)
+          CurrentRoomIndex = 1 
+          LastTargetPos = Vector3.new(0, 0, 0)
+          isMoving = false
           task.spawn(doAutoFarm)
           Rayfield:Notify({
              Title = "Auto Farm",
-             Content = "Đã BẬT tự động chạy tới quái map " .. CurrentMap,
+             Content = "Đã BẬT tự động chạy mượt mà không nhấp chân!",
              Duration = 2,
              Image = 4483362458,
           })
       else
+          isMoving = false
           Rayfield:Notify({
              Title = "Auto Farm",
              Content = "Đã TẮT tự động di chuyển.",
@@ -181,7 +193,7 @@ MainTab:CreateToggle({
 -- Thông báo sẵn sàng
 Rayfield:Notify({
    Title = "Thành Công!",
-   Content = "Đã tải xong danh sách quái cho " .. CurrentMap,
+   Content = "Đã sửa hoàn toàn lỗi nhấp chân di chuyển!",
    Duration = 3,
    Image = 4483362458,
 })
