@@ -24,19 +24,19 @@ _G.AutoFarm = false -- Biến toàn cục để kiểm soát vòng lặp farm
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- [[ 3. LOGIC HÀM AUTO FARM (MOVE TO) ]]
+-- [[ 3. LOGIC HÀM AUTO FARM (SỬ DỤNG MOVETO ĐẢM BẢO KHÔNG TELE) ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(0.5) -- Tăng thời gian chờ một chút để tránh spam lệnh liên tục làm nhân vật bị khựng
+        task.wait(0.5) 
         
         local character = LocalPlayer.Character
-        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
         local humanoid = character and character:FindFirstChild("Humanoid")
+        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
         
-        if rootPart and humanoid then
+        if humanoid and rootPart then
             local targetEnemy = nil
             
-            -- Tìm quái gần nhất (hoặc bất kỳ con nào còn sống)
+            -- Quét quái
             for _, enemy in pairs(workspace.Enemies:GetChildren()) do
                 if enemy.Name == "Raider Punisher" and enemy:FindFirstChild("HumanoidRootPart") then
                     local eHumanoid = enemy:FindFirstChildOfClass("Humanoid")
@@ -47,15 +47,15 @@ local function doAutoFarm()
                 end
             end
             
-            -- Nếu tìm thấy quái thì di chuyển tới
+            -- DI CHUYỂN BẰNG MOVETO (KHÔNG DÙNG CFRAME)
             if targetEnemy then
-                humanoid:MoveTo(targetEnemy.HumanoidRootPart.Position)
+                local targetPos = targetEnemy.HumanoidRootPart.Position
                 
-                -- Tùy chọn: Nếu muốn dừng lại khi đã đủ gần (ví dụ cách 5 đơn vị)
-                local distance = (rootPart.Position - targetEnemy.HumanoidRootPart.Position).Magnitude
-                if distance < 5 then
-                    humanoid:MoveTo(rootPart.Position) -- Dừng di chuyển
-                end
+                -- Lệnh này khiến nhân vật đi tới vị trí quái
+                humanoid:MoveTo(targetPos)
+                
+                -- Để đảm bảo nhân vật không bị khựng, hãy đảm bảo không có lệnh CFrame nào khác chạy đè lên
+                print("Đang di chuyển tới: " .. targetEnemy.Name)
             end
         end
     end
