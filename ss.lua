@@ -79,8 +79,8 @@ local function walkToTarget(targetPosition)
         if waypoints and #waypoints > 1 then
             local nextWaypoint = waypoints[2]
             
-            -- SỬA LỖI TẠI ĐÂY: Thay Enum.PathAction bằng Enum.PathWaypointsAction
-            if nextWaypoint.Action == Enum.Enum.PathWaypointsAction.Jump then
+            -- ĐÃ SỬA CHÍNH XÁC: Đổi thành Enum.PathWaypointAction.Jump công thức chuẩn Roblox
+            if nextWaypoint.Action == Enum.PathWaypointAction.Jump then
                 humanoid.Jump = true
             end
             
