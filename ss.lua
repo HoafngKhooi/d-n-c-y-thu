@@ -36,19 +36,12 @@ RunService.Heartbeat:Connect(function(dt)
             
             local dist = (myRoot.Position - targetRoot.Position).Magnitude
             if dist > 6 then
-                myHumanoid:MoveTo(targetRoot.Position)
-                
-                if (myRoot.Position - lastPos).Magnitude < 0.5 then
-                    stuckTime = stuckTime + dt
-                else
-                    stuckTime = 0
-                end
-                
-                if stuckTime > 2 then
-                    myHumanoid.Jump = true
-                    stuckTime = 0
-                end
-                lastPos = myRoot.Position
+                -- Thay vì dùng MoveTo, ta dịch chuyển trực tiếp RootPart
+                local direction = (targetRoot.Position - myRoot.Position).Unit
+                myRoot.CFrame = myRoot.CFrame + (direction * 0.2)
+    
+                -- Vẫn ép tốc độ phòng hờ
+                if myHumanoid.WalkSpeed < 22 then myHumanoid.WalkSpeed = 22 end
             else
                 myHumanoid:MoveTo(myRoot.Position)
             end
