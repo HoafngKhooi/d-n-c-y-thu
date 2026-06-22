@@ -67,34 +67,38 @@ Tab:CreateToggle({
     end,
 })
 
-RunService.Heartbeat:Connect(function()
-    if IsFollowing and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myChar = LocalPlayer.Character
-        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        local myHumanoid = myChar and myChar:FindFirstChild("Humanoid")
-        local targetRoot = TargetPlayer.Character.HumanoidRootPart
-        
-        if myRoot and myHumanoid then
-            -- 1. Bỏ qua ma sát bằng cách tắt va chạm tạm thời
-            for _, part in pairs(myChar:GetChildren()) do
-                if part:IsA("BasePart") then
-                    part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0) -- Không ma sát, không nảy
-                end
-            end
-            
-            -- 2. Tính hướng và khoảng cách
-            local diff = targetRoot.Position - myRoot.Position
-            local direction = diff.Unit
-            
-            -- 3. Di chuyển bằng cách kết hợp Velocity và thay đổi hướng nhìn
-            if diff.Magnitude > 5 then
-                myRoot.AssemblyLinearVelocity = Vector3.new(direction.X * 30, myRoot.AssemblyLinearVelocity.Y, direction.Z * 30)
-                myHumanoid.AutoRotate = false -- Tắt tự xoay để không bị giật khi di chuyển
-                myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
-            else
-                myRoot.AssemblyLinearVelocity = Vector3.new(0, myRoot.AssemblyLinearVelocity.Y, 0)
-                myHumanoid.AutoRotate = true
-            end
+local TweenService = game:GetService("TweenService")
+
+-- Hàm Teleport giả lập (Đi bộ mượt)
+local function TeleportToPlayer(target)
+    if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then return end
+    
+    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myRoot then return end
+    
+    local targetPos = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+    
+    -- Tính toán tốc độ: quãng đường càng xa thì thời gian di chuyển càng lâu
+    local distance = (myRoot.Position - targetPos.Position).Magnitude
+    local speed = 50 -- Tốc độ di chuyển (studs/giây), chỉnh số này để tăng/giảm tốc độ
+    local timeToTravel = distance / speed
+    
+    local tweenInfo = TweenInfo.new(
+        timeToTravel, 
+        Enum.EasingStyle.Linear, 
+        Enum.EasingDirection.Out
+    )
+    
+    local tween = TweenService:Create(myRoot, tweenInfo, {CFrame = targetPos})
+    tween:Play()
+end
+
+-- Sử dụng nó trong vòng lặp (giữ cập nhật mỗi 0.5s để đuổi theo)
+task.spawn(function()
+    while true do
+        task.wait(0.5) 
+        if IsFollowing and TargetPlayer then
+            TeleportToPlayer(TargetPlayer)
         end
     end
 end)
