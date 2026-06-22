@@ -24,8 +24,10 @@ _G.AutoFarm = false
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
+-- Biến theo dõi số Room hiện tại (Sẽ tự tăng khi qua cửa từ Room1 -> Room7)
+local CurrentRoomIndex = 1
+
 -- [[ 2.5. CẤU HÌNH DANH SÁCH MAP VÀ QUÁI ]]
--- Sau này nếu bạn mở thêm map mới, chỉ cần copy cấu trúc này điền xuống dưới là xong, rất gọn!
 local MapConfig = {
     ["Raided Village"] = {
         -- Sắp xếp theo thứ tự ưu tiên farm từ trên xuống dưới
@@ -53,10 +55,10 @@ local function isValidEnemy(enemyName)
     return nil
 end
 
--- [[ 3. LOGIC HÀM AUTO FARM (SỬ DỤNG MOVETO) ]]
+-- [[ 3. LOGIC HÀM AUTO FARM ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(0.3) -- Giảm delay một chút xuống 0.3s để nhận diện quái mượt hơn
+        task.wait(0.3) 
         
         local character = LocalPlayer.Character
         local humanoid = character and character:FindFirstChild("Humanoid")
@@ -64,19 +66,15 @@ local function doAutoFarm()
         
         if humanoid and rootPart then
             local targetEnemy = nil
-            local highestPriority = 999 -- Số càng nhỏ độ ưu tiên càng cao
+            local highestPriority = 999 
             
-            -- Quét qua toàn bộ thực thể trong folder Enemies
+            -- Bước 1: Quét tìm xem còn quái sống trong map không
             for _, enemy in pairs(workspace.Enemies:GetChildren()) do
                 if enemy:FindFirstChild("HumanoidRootPart") then
                     local eHumanoid = enemy:FindFirstChildOfClass("Humanoid")
                     
-                    -- Kiểm tra nếu quái còn sống
                     if eHumanoid and eHumanoid.Health > 0 then
-                        -- Kiểm tra quái này có nằm trong danh sách map hiện tại không
                         local priority = isValidEnemy(enemy.Name)
-                        
-                        -- Nếu có và độ ưu tiên cao hơn quái cũ (số nhỏ hơn)
                         if priority and priority < highestPriority then
                             highestPriority = priority
                             targetEnemy = enemy
@@ -85,11 +83,39 @@ local function doAutoFarm()
                 end
             end
             
-            -- DI CHUYỂN ĐẾN MỤC TIÊU ĐÃ CHỌN
+            -- Bước 2: Ra quyết định di chuyển
             if targetEnemy then
+                -- CÒN QUÁI: Chạy tới đấm quái
                 local targetPos = targetEnemy.HumanoidRootPart.Position
                 humanoid:MoveTo(targetPos)
-                print("Đang di chuyển tới [" .. CurrentMap .. "]: " .. targetEnemy.Name)
+                print("Đang di chuyển tới quái: " .. targetEnemy.Name)
+            else
+                -- HẾT QUÁI: Xử lý Barrier của Room hiện tại để qua màn
+                local roomName = "Room" .. tostring(CurrentRoomIndex)
+                local roomInfo = workspace:FindFirstChild("roomInformation")
+                local currentRoom = roomInfo and roomInfo:FindFirstChild(roomName)
+                local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
+                
+                -- Điều kiện kiểm tra xem Barrier CÒN CHẶN đường hay không
+                -- (Còn trong Workspace, chưa tàng hình, và vẫn còn chặn va chạm)
+                if barrier and barrier:IsA("BasePart") and barrier.Transparency < 0.5 and barrier.CanCollide == true then
+                    -- Cửa chưa mở -> Chạy thẳng tới dí đầu vào cửa đợi sẵn
+                    humanoid:MoveTo(barrier.Position)
+                    print("Hết quái Room " .. CurrentRoomIndex .. "! Đang đứng chờ mở Barrier...")
+                else
+                    -- Cửa ĐÃ MỞ (Hoặc bị xóa, hoặc tàng hình, hoặc cho đi xuyên qua)
+                    if CurrentRoomIndex < 7 then
+                        print("Barrier " .. roomName .. " đã mở! Tiến lên Room " .. (CurrentRoomIndex + 1))
+                        
+                        -- Nếu cửa mở, ra lệnh cho nhân vật chạy qua vị trí cửa cũ để tiến vào Room mới
+                        if barrier then
+                            humanoid:MoveTo(barrier.Position)
+                        end
+                        
+                        CurrentRoomIndex = CurrentRoomIndex + 1
+                        task.wait(1.5) -- Chờ 1.5 giây để nhân vật kịp chạy qua hẳn phòng mới rồi mới quét quái tiếp
+                    end
+                end
             end
         end
     end
