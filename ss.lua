@@ -1,17 +1,11 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
-local Window = Rayfield:CreateWindow({
-    Name = "Helper Script - Pro Edition",
-    LoadingTitle = "Đang khởi tạo...",
-    LoadingSubtitle = "by Gemini",
-})
-
-local Tab = Window:CreateTab("Chức năng chính", nil)
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
+
+local Window = Rayfield:CreateWindow({Name = "Helper Script - Pro Edition", LoadingTitle = "Khởi tạo...", LoadingSubtitle = "by Gemini"})
+local Tab = Window:CreateTab("Chức năng chính", nil)
 
 local TargetPlayer = nil
 local IsFollowing = false
@@ -27,6 +21,45 @@ local function RefreshPlayerList()
     end
     return list
 end
+
+-- Hàm hỗ trợ
+local function PressKey(key, state) VirtualInputManager:SendKeyEvent(state, key, false, game) end
+
+-- Logic RenderStepped đã tối ưu (Thêm cơ chế chống kẹt)
+RunService.RenderStepped:Connect(function()
+    if IsFollowing and TargetPlayer and TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local myChar = LocalPlayer.Character
+        local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local myHumanoid = myChar and myChar:FindFirstChild("Humanoid")
+
+        if myRoot and targetRoot and myHumanoid then
+            -- 1. Bật xuyên người (Tắt va chạm với người chơi khác) để đi theo không bị đẩy
+            for _, part in pairs(myChar:GetChildren()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+
+            -- 2. Xoay và Di chuyển
+            local targetPos = targetRoot.Position
+            local lookAt = CFrame.new(myRoot.Position, Vector3.new(targetPos.X, myRoot.Position.Y, targetPos.Z))
+            myRoot.CFrame = myRoot.CFrame:Lerp(lookAt, 0.2)
+
+            local distance = (myRoot.Position - targetPos).Magnitude
+            
+            -- Thay phần if distance > 6 ở trên thành:
+            if distance > 6 then
+                PressKey(Enum.KeyCode.W, true)
+                if myHumanoid.MoveDirection.Magnitude == 0 then myHumanoid.Jump = true end
+            else
+                PressKey(Enum.KeyCode.W, false)
+                -- Khi đủ gần, xóa lực di chuyển để nhân vật đứng yên thay vì trôi
+                myRoot.AssemblyLinearVelocity = Vector3.new(0,0,0) 
+            end
+        end
+    else
+        PressKey(Enum.KeyCode.W, false)
+    end
+end)
 
 -- Cập nhật lại phần khai báo Dropdown
 local Dropdown = Tab:CreateDropdown({
@@ -66,42 +99,6 @@ Tab:CreateToggle({
         IsFollowing = Value
     end,
 })
-
-local TweenService = game:GetService("TweenService")
-
--- Hàm Teleport giả lập (Đi bộ mượt)
-local function TeleportToPlayer(target)
-    if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then return end
-    
-    local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not myRoot then return end
-    
-    local targetPos = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-    
-    -- Tính toán tốc độ: quãng đường càng xa thì thời gian di chuyển càng lâu
-    local distance = (myRoot.Position - targetPos.Position).Magnitude
-    local speed = 50 -- Tốc độ di chuyển (studs/giây), chỉnh số này để tăng/giảm tốc độ
-    local timeToTravel = distance / speed
-    
-    local tweenInfo = TweenInfo.new(
-        timeToTravel, 
-        Enum.EasingStyle.Linear, 
-        Enum.EasingDirection.Out
-    )
-    
-    local tween = TweenService:Create(myRoot, tweenInfo, {CFrame = targetPos})
-    tween:Play()
-end
-
--- Sử dụng nó trong vòng lặp (giữ cập nhật mỗi 0.5s để đuổi theo)
-task.spawn(function()
-    while true do
-        task.wait(0.5) 
-        if IsFollowing and TargetPlayer then
-            TeleportToPlayer(TargetPlayer)
-        end
-    end
-end)
 
 -- Cơ chế nhấn F (Đã tối ưu)
 Tab:CreateToggle({
