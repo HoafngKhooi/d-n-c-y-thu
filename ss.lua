@@ -9,50 +9,47 @@ local IsSpammingF = true -- Mặc định bật để bạn test luôn
 
 local function PressKey(key, state) VirtualInputManager:SendKeyEvent(state, key, false, game) end
 
--- Logic bám theo
-RunService.Heartbeat:Connect(function()
+local lastPos = Vector3.new(0, 0, 0)
+local stuckTime = 0
+
+RunService.Heartbeat:Connect(function(dt)
     if not IsFollowing then return end
     
     local TargetPlayer = Players:FindFirstChild(TargetName)
     local myChar = LocalPlayer.Character
+    
     if TargetPlayer and TargetPlayer.Character and myChar then
         local myRoot = myChar:FindFirstChild("HumanoidRootPart")
         local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
         local myHumanoid = myChar:FindFirstChild("Humanoid")
         
         if myRoot and targetRoot and myHumanoid then
+            -- Ép tốc độ
+            if myHumanoid.WalkSpeed < 22 then myHumanoid.WalkSpeed = 22 end
+            
+            -- Tắt va chạm
             for _, part in pairs(myChar:GetChildren()) do
                 if part:IsA("BasePart") then part.CanCollide = false end
             end
             
-            local targetPos = targetRoot.Position
-            local dist = (myRoot.Position - targetPos).Magnitude
+            local dist = (myRoot.Position - targetRoot.Position).Magnitude
             if dist > 6 then
-                -- 1. Xoay hướng
-                myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetPos.X, myRoot.Position.Y, targetPos.Z))
+                myHumanoid:MoveTo(targetRoot.Position)
                 
-                -- 2. Ép WalkSpeed (Đây là cách tăng tốc độ nhân vật nhanh nhất)
-                if myHumanoid.WalkSpeed < 50 then 
-                    myHumanoid.WalkSpeed = 50 -- Ép tốc độ chạy (Đừng để quá 100)
+                -- Logic chống kẹt thông minh (dùng delta time dt)
+                if (myRoot.Position - lastPos).Magnitude < 0.5 then
+                    stuckTime = stuckTime + dt
+                else
+                    stuckTime = 0
                 end
                 
-                -- 3. Đẩy vận tốc cực đại
-                local dir = (targetPos - myRoot.Position).Unit
-                local speed = 60 -- Mức tối đa thử nghiệm
-                myRoot.AssemblyLinearVelocity = Vector3.new(dir.X * speed, myRoot.AssemblyLinearVelocity.Y, dir.Z * speed)
-                
-                -- Ép Humanoid di chuyển
-                myHumanoid:Move(dir, true)
-                
-                -- 4. Chống kẹt
-                if myHumanoid.MoveDirection.Magnitude == 0 and dist > 6 then 
-                    myHumanoid.Jump = true 
+                if stuckTime > 2 then -- Nếu kẹt quá 2 giây
+                    myHumanoid.Jump = true
+                    stuckTime = 0
                 end
+                lastPos = myRoot.Position
             else
-                -- Reset WalkSpeed về bình thường khi dừng
-                if myHumanoid.WalkSpeed > 16 then myHumanoid.WalkSpeed = 16 end
-                myRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                myHumanoid:Move(Vector3.new(0,0,0), false)
+                myHumanoid:MoveTo(myRoot.Position)
             end
         end
     end
