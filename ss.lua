@@ -28,22 +28,23 @@ RunService.Heartbeat:Connect(function(dt)
         local myHumanoid = myChar:FindFirstChild("Humanoid")
         
         if myRoot and targetRoot and myHumanoid then
+            -- 1. Ép tốc độ và Animation
             if myHumanoid.WalkSpeed < 22 then myHumanoid.WalkSpeed = 22 end
-            
-            for _, part in pairs(myChar:GetChildren()) do
-                if part:IsA("BasePart") then part.CanCollide = false end
-            end
             
             local dist = (myRoot.Position - targetRoot.Position).Magnitude
             if dist > 6 then
-                -- Thay vì dùng MoveTo, ta dịch chuyển trực tiếp RootPart
                 local direction = (targetRoot.Position - myRoot.Position).Unit
-                myRoot.CFrame = myRoot.CFrame + (direction * 0.2)
-    
-                -- Vẫn ép tốc độ phòng hờ
-                if myHumanoid.WalkSpeed < 22 then myHumanoid.WalkSpeed = 22 end
+                
+                -- 2. Dịch chuyển CFrame để đi nhanh
+                myRoot.CFrame = myRoot.CFrame + (direction * 0.3) -- Tăng lên 0.3 cho mượt hơn
+                
+                -- 3. QUAN TRỌNG: Gọi lệnh Move để kích hoạt Animation
+                myHumanoid:Move(direction, true) 
+                
+                -- 4. Ép hướng nhìn
+                myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
             else
-                myHumanoid:MoveTo(myRoot.Position)
+                myHumanoid:Move(Vector3.new(0,0,0), false)
             end
         end
     end
