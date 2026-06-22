@@ -46,7 +46,7 @@ local function isValidEnemy(enemyName)
     return nil
 end
 
--- [[ 2.8. HÀM TÌM ĐƯỜNG ĐI MỘT MẠCH (ĐÃ KHỬ KHỰNG KHHI ĐUỔI QUÁI) ]]
+-- [[ 2.8. HÀM TÌM ĐƯỜNG ĐI MỘT MẠCH (ĐÃ SỬA LỖI GIẬT LẮC KHI TÍNH TOÀN HITBOX) ]]
 local function moveToTargetSmooth(targetPart)
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChild("Humanoid")
@@ -54,13 +54,38 @@ local function moveToTargetSmooth(targetPart)
     
     if not humanoid or not rootPart or not targetPart then return end
     
-    -- TỐI ƯU CỐT LÕI: Nếu đã ở rất gần quái (dưới 12 studs), đi thẳng bằng MoveTo luôn, không thèm gọi Pathfinding nữa cho đỡ giật
-    local distanceToTarget = (rootPart.Position - targetPart.Position).Magnitude
-    if distanceToTarget < 12 then
-        humanoid:MoveTo(targetPart.Position)
+    -- 1. TÍNH TOÁN TẦM CHÉM THỰC TẾ (Mặc định là 7 studs nếu không thấy hitbox)
+    local attackRange = 7 
+    local weaponHitbox = workspace:FindFirstChild("SwingHitboxAgony")
+    
+    if weaponHitbox and weaponHitbox:IsA("BasePart") then
+        -- Game Roblox thường thiết kế chiều dài vung kiếm theo trục Z của Part Hitbox
+        attackRange = (weaponHitbox.Size.Z / 2) + 2
+    end
+    
+    -- Triệt tiêu cao độ Y để tính khoảng cách mặt đất chính xác, tránh quái nhảy làm lệch hướng
+    local pPos = Vector3.new(rootPart.Position.X, 0, rootPart.Position.Z)
+    local tPos = Vector3.new(targetPart.Position.X, 0, targetPart.Position.Z)
+    
+    local distanceToTarget = (pPos - tPos).Magnitude
+    
+    -- TỐI ƯU CHỐNG NHẤP CHÂN: Nếu đã nằm trong tầm chém + sai số nhỏ (1.5 studs), đứng yên chém hoàn toàn
+    if distanceToTarget <= (attackRange + 1.5) then
+        humanoid:MoveTo(rootPart.Position) 
         return
     end
     
+    -- 2. TÍNH ĐIỂM DỪNG (Chỉ tính khi ở ngoài tầm chém)
+    local direction = (tPos - pPos).Unit
+    local stopPosition = targetPart.Position - (direction * attackRange)
+    
+    -- Nếu ở khoảng cách cận chiến gần (dưới 16 studs) nhưng chưa tới tầm chém, sấn thẳng tới điểm dừng
+    if distanceToTarget < 16 then
+        humanoid:MoveTo(stopPosition)
+        return
+    end
+    
+    -- 3. ĐIỀU HƯỚNG NÉ TƯỜNG KHI Ở XA
     local path = PathfindingService:CreatePath({
         AgentRadius = 2,
         AgentHeight = 5,
@@ -68,13 +93,12 @@ local function moveToTargetSmooth(targetPart)
     })
     
     local success, _ = pcall(function()
-        path:ComputeAsync(rootPart.Position, targetPart.Position)
+        path:ComputeAsync(rootPart.Position, stopPosition)
     end)
     
     if success and path.Status == Enum.PathStatus.Success then
         local waypoints = path:GetWaypoints()
         if waypoints and #waypoints > 1 then
-            -- Chỉ lấy đúng điểm thứ 2 để di chuyển bước đệm hướng né tường
             local waypoint = waypoints[2]
             if waypoint.Action == Enum.PathWaypointAction.Jump then
                 humanoid.Jump = true
@@ -82,7 +106,7 @@ local function moveToTargetSmooth(targetPart)
             humanoid:MoveTo(waypoint.Position)
         end
     else
-        humanoid:MoveTo(targetPart.Position)
+        humanoid:MoveTo(stopPosition)
     end
 end
 
