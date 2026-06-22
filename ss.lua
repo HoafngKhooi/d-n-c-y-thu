@@ -10,7 +10,7 @@ local IsSpammingF = true
 
 repeat task.wait() until LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
-RunService.RenderStepped:Connect(function()
+RunService.Heartbeat:Connect(function(dt)
     if not IsFollowing then return end
     
     local TargetPlayer = Players:FindFirstChild(TargetName)
@@ -22,29 +22,27 @@ RunService.RenderStepped:Connect(function()
     local myHumanoid = myChar:FindFirstChild("Humanoid")
     
     if myRoot and targetRoot and myHumanoid then
-        -- 1. Tính toán vị trí SAU LƯNG mục tiêu 3 stud
+        -- 1. Tính toán vị trí bám sát sau lưng (Offset 3 stud)
         local offset = targetRoot.CFrame.LookVector * -3 
         local targetBehind = targetRoot.Position + offset
         
-        -- 2. Ép Camera nhìn về mục tiêu
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetRoot.Position)
-        
-        -- 3. Bám sát bằng CFrame (Di chuyển cực nhanh và chuẩn)
+        -- 2. ĐIỀU KHIỂN CHUẨN (Không dùng CFrame để tránh loạn xạ)
         local dist = (myRoot.Position - targetBehind).Magnitude
-        if dist > 1 then -- Nếu cách quá 1 stud là bám ngay
-            -- Xoay nhân vật về hướng mục tiêu
-            myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
+        
+        if dist > 2 then
+            -- Chỉ dùng MoveTo khi khoảng cách > 2 stud để không bị giật
+            myHumanoid:MoveTo(targetBehind)
             
-            -- Ép nhân vật nhích về phía vị trí sau lưng mục tiêu
-            local direction = (targetBehind - myRoot.Position).Unit
-            myRoot.CFrame = myRoot.CFrame + (direction * 0.5)
-            
-            -- Gọi Move để giữ Animation
-            myHumanoid:Move(direction, true)
+            -- Ép tốc độ chạy cao hơn bình thường để bám kịp
+            myHumanoid.WalkSpeed = 26
+        else
+            -- Khi đã tới nơi, dừng MoveTo để nhân vật đứng yên, tránh bị trôi
+            myHumanoid:MoveTo(myRoot.Position)
         end
         
-        -- 4. Ép tốc độ chạy (chỉ để đảm bảo không bị khựng)
-        if myHumanoid.WalkSpeed < 26 then myHumanoid.WalkSpeed = 26 end
+        -- 3. Khóa góc nhìn mượt mà (Dùng lerp để không bị giật camera)
+        local targetLookAt = CFrame.new(Camera.CFrame.Position, targetRoot.Position)
+        Camera.CFrame = Camera.CFrame:Lerp(targetLookAt, 0.1)
     end
 end)
 
