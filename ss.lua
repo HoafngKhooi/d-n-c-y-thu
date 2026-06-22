@@ -11,10 +11,21 @@ local IsSpammingF = true
 -- Chờ character sẵn sàng
 repeat task.wait() until LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 
+local function GetTarget()
+    for _, player in pairs(Players:GetPlayers()) do
+        -- Kiểm tra cả Name (Username) và DisplayName
+        if string.find(string.lower(player.Name), string.lower(TargetName)) or 
+           string.find(string.lower(player.DisplayName), string.lower(TargetName)) then
+            return player
+        end
+    end
+    return nil
+end
+
 RunService.Heartbeat:Connect(function()
     if not IsFollowing then return end
     
-    local TargetPlayer = Players:FindFirstChild(TargetName)
+    local TargetPlayer = GetTarget() -- Dùng hàm tìm kiếm thông minh
     local myChar = LocalPlayer.Character
     
     if TargetPlayer and TargetPlayer.Character and myChar then
