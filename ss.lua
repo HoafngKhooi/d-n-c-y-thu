@@ -22,20 +22,22 @@ RunService.RenderStepped:Connect(function()
     local myHumanoid = myChar:FindFirstChild("Humanoid")
     
     if myRoot and targetRoot and myHumanoid then
-        -- 1. KHÓA GÓC NHÌN (Lock Camera)
-        -- Tự động xoay Camera theo mục tiêu
+        -- 1. Tính toán vị trí "Sau lưng" (Offset)
+        -- Nhân vật đứng sau lưng đối phương 3 stud
+        local offset = targetRoot.CFrame.LookVector * -3 
+        local behindPos = targetRoot.Position + offset
+        
+        -- 2. Khóa góc nhìn vào đối phương
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetRoot.Position)
         
-        -- 2. ĐI BỘ NHANH (Bypass tốc độ)
+        -- 3. Ép tốc độ
         if myHumanoid.WalkSpeed < 24 then myHumanoid.WalkSpeed = 24 end
         
-        -- 3. DI CHUYỂN TỰ NHIÊN (Giữ nguyên Animation)
-        local dist = (myRoot.Position - targetRoot.Position).Magnitude
-        if dist > 6 then
-            -- Ép nhân vật nhìn về phía mục tiêu
+        -- 4. Di chuyển bám theo vị trí bù (behindPos)
+        local dist = (myRoot.Position - behindPos).Magnitude
+        if dist > 2 then -- Chỉ đi khi khoảng cách lớn hơn 2 stud để tránh bị rung giật
             myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
-            -- Lệnh MoveTo chuẩn giữ animation
-            myHumanoid:MoveTo(targetRoot.Position)
+            myHumanoid:MoveTo(behindPos)
         else
             myHumanoid:MoveTo(myRoot.Position)
         end
