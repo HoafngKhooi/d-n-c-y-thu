@@ -31,21 +31,26 @@ RunService.Heartbeat:Connect(function()
                 -- 1. Xoay hướng
                 myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetPos.X, myRoot.Position.Y, targetPos.Z))
                 
-                -- 2. Kết hợp cả 2 cách di chuyển
-                local dir = (targetPos - myRoot.Position).Unit
-                local speed = 25 -- TĂNG LÊN ĐÂY (thử 25 trước)
+                -- 2. Ép WalkSpeed (Đây là cách tăng tốc độ nhân vật nhanh nhất)
+                if myHumanoid.WalkSpeed < 50 then 
+                    myHumanoid.WalkSpeed = 50 -- Ép tốc độ chạy (Đừng để quá 100)
+                end
                 
-                -- Đẩy vận tốc
+                -- 3. Đẩy vận tốc cực đại
+                local dir = (targetPos - myRoot.Position).Unit
+                local speed = 60 -- Mức tối đa thử nghiệm
                 myRoot.AssemblyLinearVelocity = Vector3.new(dir.X * speed, myRoot.AssemblyLinearVelocity.Y, dir.Z * speed)
-                -- Ép thêm Humanoid di chuyển (tránh bị anti-cheat soi)
+                
+                -- Ép Humanoid di chuyển
                 myHumanoid:Move(dir, true)
                 
-                -- 3. Chống kẹt
+                -- 4. Chống kẹt
                 if myHumanoid.MoveDirection.Magnitude == 0 and dist > 6 then 
                     myHumanoid.Jump = true 
                 end
             else
-                -- Khi đến gần, dừng hẳn
+                -- Reset WalkSpeed về bình thường khi dừng
+                if myHumanoid.WalkSpeed > 16 then myHumanoid.WalkSpeed = 16 end
                 myRoot.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 myHumanoid:Move(Vector3.new(0,0,0), false)
             end
