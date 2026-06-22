@@ -2,54 +2,47 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 local TargetName = "hoafngkhooi"
-local IsFollowing = true -- Mặc định bật để bạn test luôn
-local IsSpammingF = true -- Mặc định bật để bạn test luôn
+local IsFollowing = true 
+local IsSpammingF = true 
 
--- [VỊ TRÍ GẮN ĐOẠN CHỜ LOAD VÀO ĐÂY]
 repeat task.wait() until LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-print("Script đã load thành công trong Map!")
 
-local function PressKey(key, state) VirtualInputManager:SendKeyEvent(state, key, false, game) end
-
-local lastPos = Vector3.new(0, 0, 0)
-local stuckTime = 0
-
-RunService.Heartbeat:Connect(function(dt)
+RunService.RenderStepped:Connect(function()
     if not IsFollowing then return end
     
     local TargetPlayer = Players:FindFirstChild(TargetName)
     local myChar = LocalPlayer.Character
+    if not (TargetPlayer and TargetPlayer.Character and myChar) then return end
     
-    if TargetPlayer and TargetPlayer.Character and myChar then
-        local myRoot = myChar:FindFirstChild("HumanoidRootPart")
-        local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        local myHumanoid = myChar:FindFirstChild("Humanoid")
+    local myRoot = myChar:FindFirstChild("HumanoidRootPart")
+    local targetRoot = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    local myHumanoid = myChar:FindFirstChild("Humanoid")
+    
+    if myRoot and targetRoot and myHumanoid then
+        -- 1. KHÓA GÓC NHÌN (Lock Camera)
+        -- Tự động xoay Camera theo mục tiêu
+        Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetRoot.Position)
         
-        if myRoot and targetRoot and myHumanoid then
-            -- 1. Ép tốc độ và Animation
-            if myHumanoid.WalkSpeed < 22 then myHumanoid.WalkSpeed = 22 end
-            
-            local dist = (myRoot.Position - targetRoot.Position).Magnitude
-            if dist > 6 then
-                local direction = (targetRoot.Position - myRoot.Position).Unit
-                
-                -- 2. Dịch chuyển CFrame để đi nhanh
-                myRoot.CFrame = myRoot.CFrame + (direction * 0.3) -- Tăng lên 0.3 cho mượt hơn
-                
-                -- 3. QUAN TRỌNG: Gọi lệnh Move để kích hoạt Animation
-                myHumanoid:Move(direction, true) 
-                
-                -- 4. Ép hướng nhìn
-                myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
-            else
-                myHumanoid:Move(Vector3.new(0,0,0), false)
-            end
+        -- 2. ĐI BỘ NHANH (Bypass tốc độ)
+        if myHumanoid.WalkSpeed < 24 then myHumanoid.WalkSpeed = 24 end
+        
+        -- 3. DI CHUYỂN TỰ NHIÊN (Giữ nguyên Animation)
+        local dist = (myRoot.Position - targetRoot.Position).Magnitude
+        if dist > 6 then
+            -- Ép nhân vật nhìn về phía mục tiêu
+            myRoot.CFrame = CFrame.new(myRoot.Position, Vector3.new(targetRoot.Position.X, myRoot.Position.Y, targetRoot.Position.Z))
+            -- Lệnh MoveTo chuẩn giữ animation
+            myHumanoid:MoveTo(targetRoot.Position)
+        else
+            myHumanoid:MoveTo(myRoot.Position)
         end
     end
 end)
 
+-- Auto F giữ nguyên
 task.spawn(function()
     while true do
         if IsSpammingF then
