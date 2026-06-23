@@ -34,9 +34,11 @@ local MapConfig = {
             "Raider Punisher",              
             "Raider Magician"               
         },
-        -- Danh sách các thư mục chứa cấu trúc map tĩnh để AI né tránh
+        -- Cập nhật danh sách các thư mục chứa vật cản, nền và tường chặn của Map
         Obstacles = {
-            workspace:FindFirstChild("DungeonMap") -- Quét toàn bộ vật cản bên trong DungeonMap
+            workspace:FindFirstChild("DungeonMap"),
+            workspace:FindFirstChild("Floors"),
+            workspace:FindFirstChild("MapBarriers")
         }
     }
 }
@@ -58,33 +60,42 @@ end
 local stuckTime = 0
 local globalPath = nil
 local lastInitializedMap = nil
+-- Thêm một biến local ở trên đầu hàm getSharedPath để lưu số phòng cũ
+local lastInitializedRoom = nil
 
 local function getSharedPath()
-    if globalPath and lastInitializedMap == CurrentMap then return globalPath end
+    -- SỬA TẠI ĐÂY: Nếu trùng map VÀ trùng số phòng thì mới dùng lại Path cũ
+    if globalPath and lastInitializedMap == CurrentMap and lastInitializedRoom == CurrentRoomIndex then 
+        return globalPath 
+    end
     
     local mapData = MapConfig[CurrentMap]
-    local agentParams = {
-        AgentRadius = 2.5,
-        AgentHeight = 5,
-        AgentCanJump = true,
-        Costs = {}
-    }
+    local exclusionList = {}
     
     if mapData and mapData.Obstacles then
         for _, obstacleContainer in pairs(mapData.Obstacles) do
             if obstacleContainer then
-                agentParams.Costs[obstacleContainer.Name] = math.huge
+                table.insert(exclusionList, obstacleContainer)
                 for _, child in pairs(obstacleContainer:GetDescendants()) do
-                    if child:IsA("BasePart") then
-                        agentParams.Costs[child.Name] = math.huge
+                    if child:IsA("BasePart") or child:IsA("Model") then
+                        table.insert(exclusionList, child)
                     end
                 end
             end
         end
     end
     
+    local agentParams = {
+        AgentRadius = 2.5,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        Costs = {},
+        Excludes = exclusionList
+    }
+    
     globalPath = PathfindingService:CreatePath(agentParams)
     lastInitializedMap = CurrentMap
+    lastInitializedRoom = CurrentRoomIndex -- Lưu lại số phòng vừa khởi tạo
     return globalPath
 end
 
