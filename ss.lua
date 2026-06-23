@@ -26,29 +26,62 @@ local TargetEnemy = nil -- Lưu trữ mục tiêu hiện tại để không qué
 
 local MapConfig = {
     ["Raided Village"] = {
-        "The Beast King",               
-        "Beastmaster Joe & Abbadon",    
-        "Raider Warrior",               
-        "Raider Punisher",              
-        "Raider Magician"               
+        -- Danh sách quái theo thứ tự ưu tiên
+        Enemies = {
+            "The Beast King",               
+            "Beastmaster Joe & Abbadon",    
+            "Raider Warrior",               
+            "Raider Punisher",              
+            "Raider Magician"               
+        },
+        -- Danh sách các thư mục chứa cấu trúc map tĩnh để AI né tránh
+        Obstacles = {
+            workspace:FindFirstChild("DungeonMap") -- Quét toàn bộ vật cản bên trong DungeonMap
+        }
     }
 }
 
 local CurrentMap = "Raided Village"
 
+-- Sửa lại hàm check quái một chút để khớp với cấu trúc mới
 local function isValidEnemy(enemyName)
-    local mobList = MapConfig[CurrentMap]
-    if not mobList then return nil end
+    local mapData = MapConfig[CurrentMap]
+    if not mapData or not mapData.Enemies then return nil end
     
-    for index, name in ipairs(mobList) do
+    for index, name in ipairs(mapData.Enemies) do
         if enemyName == name then return index end
     end
     return nil
 end
 
--- [[ 2.8. HÀM TÌM ĐƯỜNG ĐI MỘT MẠCH (CẬP NHẬT: TỰ ĐỘNG NHẢY KHI BỊ KẸT VẬT CẢN) ]]
-local lastPosition = Vector3.new(0,0,0)
+-- [[ 2.8. HÀM TÌM ĐƯỜNG ĐI MỘT MẠCH (ĐÃ TỐI ƯU HOÀN HẢO TÀI NGUYÊN & NÉ VẬT CẢN) ]]
 local stuckTime = 0
+local globalPath = nil
+local lastInitializedMap = nil
+
+local function getSharedPath()
+    if globalPath and lastInitializedMap == CurrentMap then return globalPath end
+    
+    local mapData = MapConfig[CurrentMap]
+    local agentParams = {
+        AgentRadius = 2.5,
+        AgentHeight = 5,
+        AgentCanJump = true,
+        Costs = {}
+    }
+    
+    if mapData and mapData.Obstacles then
+        for _, obstacle in pairs(mapData.Obstacles) do
+            if obstacle then
+                agentParams.Costs[obstacle.Name] = math.huge
+            end
+        end
+    end
+    
+    globalPath = PathfindingService:CreatePath(agentParams)
+    lastInitializedMap = CurrentMap
+    return globalPath
+end
 
 local function moveToTargetSmooth(targetPart)
     local character = LocalPlayer.Character
@@ -57,7 +90,7 @@ local function moveToTargetSmooth(targetPart)
     
     if not humanoid or not rootPart or not targetPart then return end
     
-    -- 1. TÍNH TOÁN TẦM CHÉM THỰC TẾ (Mặc định là 7 studs nếu không thấy hitbox)
+    -- 1. TÍNH TOÁN TẦM CHÉM THỰC TẾ
     local attackRange = 7 
     local weaponHitbox = workspace:FindFirstChild("SwingHitboxAgony")
     
@@ -65,48 +98,40 @@ local function moveToTargetSmooth(targetPart)
         attackRange = (weaponHitbox.Size.Z / 2) + 2
     end
     
-    -- Triệt tiêu cao độ Y để tính khoảng cách mặt đất chính xác
     local pPos = Vector3.new(rootPart.Position.X, 0, rootPart.Position.Z)
     local tPos = Vector3.new(targetPart.Position.X, 0, targetPart.Position.Z)
-    
     local distanceToTarget = (pPos - tPos).Magnitude
     
-    -- TỐI ƯU CHỐNG NHẤP CHÂN: Nếu đã nằm trong tầm chém, đứng yên chém hoàn toàn
+    -- TỐI ƯU CHỐNG NHẤP CHÂN
     if distanceToTarget <= (attackRange + 1.5) then
         humanoid:MoveTo(rootPart.Position) 
-        stuckTime = 0 -- Reset bộ đếm kẹt khi đã đứng im chém
+        stuckTime = 0
         return
     end
     
     -- 1.5. CƠ CHẾ KIỂM TRA KẸT VẬT CẢN (ANTI-STUCK JUMP)
-    -- Nếu nhân vật đang di chuyển nhưng vận tốc mặt đất quá thấp (< 2 studs/s)
     local groundVelocity = Vector3.new(rootPart.Velocity.X, 0, rootPart.Velocity.Z).Magnitude
     if groundVelocity < 2 then
-        stuckTime = stuckTime + 0.05 -- Cộng dồn theo thời gian task.wait của vòng lặp
-        if stuckTime >= 0.4 then -- Nếu bị khựng quá 0.4 giây thì tiến hành nhảy vượt cản
+        stuckTime = stuckTime + 0.05
+        if stuckTime >= 0.4 then
             humanoid.Jump = true
             stuckTime = 0
         end
     else
-        stuckTime = math.max(0, stuckTime - 0.05) -- Reset dần nếu đang chạy mượt
+        stuckTime = math.max(0, stuckTime - 0.05)
     end
     
-    -- 2. TÍNH ĐIỂM DỪNG (Chỉ tính khi ở ngoài tầm chém)
+    -- 2. TÍNH ĐIỂM DỪNG
     local direction = (tPos - pPos).Unit
     local stopPosition = targetPart.Position - (direction * attackRange)
     
-    -- Nếu ở khoảng cách cận chiến gần (dưới 16 studs) nhưng chưa tới tầm chém, sấn thẳng tới điểm dừng
     if distanceToTarget < 16 then
         humanoid:MoveTo(stopPosition)
         return
     end
     
-    -- 3. ĐIỀU HƯỚNG NÉ TƯỜNG KHI Ở XA
-    local path = PathfindingService:CreatePath({
-        AgentRadius = 2,
-        AgentHeight = 5,
-        AgentCanJump = true
-    })
+    -- 3. ĐIỀU HƯỚNG NÉ TƯỜNG (SỬ DỤNG LẠI PATH CŨ ĐỂ TIẾT KIỆM TÀI NGUYÊN)
+    local path = getSharedPath()
     
     local success, _ = pcall(function()
         path:ComputeAsync(rootPart.Position, stopPosition)
