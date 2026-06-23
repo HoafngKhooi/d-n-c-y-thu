@@ -46,7 +46,10 @@ local function isValidEnemy(enemyName)
     return nil
 end
 
--- [[ 2.8. HÀM TÌM ĐƯỜNG ĐI MỘT MẠCH (ĐÃ SỬA LỖI GIẬT LẮC KHI TÍNH TOÀN HITBOX) ]]
+-- [[ 2.8. HÀM TÌM ĐƯỜNG ĐI MỘT MẠCH (CẬP NHẬT: TỰ ĐỘNG NHẢY KHI BỊ KẸT VẬT CẢN) ]]
+local lastPosition = Vector3.new(0,0,0)
+local stuckTime = 0
+
 local function moveToTargetSmooth(targetPart)
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChild("Humanoid")
@@ -59,20 +62,33 @@ local function moveToTargetSmooth(targetPart)
     local weaponHitbox = workspace:FindFirstChild("SwingHitboxAgony")
     
     if weaponHitbox and weaponHitbox:IsA("BasePart") then
-        -- Game Roblox thường thiết kế chiều dài vung kiếm theo trục Z của Part Hitbox
         attackRange = (weaponHitbox.Size.Z / 2) + 2
     end
     
-    -- Triệt tiêu cao độ Y để tính khoảng cách mặt đất chính xác, tránh quái nhảy làm lệch hướng
+    -- Triệt tiêu cao độ Y để tính khoảng cách mặt đất chính xác
     local pPos = Vector3.new(rootPart.Position.X, 0, rootPart.Position.Z)
     local tPos = Vector3.new(targetPart.Position.X, 0, targetPart.Position.Z)
     
     local distanceToTarget = (pPos - tPos).Magnitude
     
-    -- TỐI ƯU CHỐNG NHẤP CHÂN: Nếu đã nằm trong tầm chém + sai số nhỏ (1.5 studs), đứng yên chém hoàn toàn
+    -- TỐI ƯU CHỐNG NHẤP CHÂN: Nếu đã nằm trong tầm chém, đứng yên chém hoàn toàn
     if distanceToTarget <= (attackRange + 1.5) then
         humanoid:MoveTo(rootPart.Position) 
+        stuckTime = 0 -- Reset bộ đếm kẹt khi đã đứng im chém
         return
+    end
+    
+    -- 1.5. CƠ CHẾ KIỂM TRA KẸT VẬT CẢN (ANTI-STUCK JUMP)
+    -- Nếu nhân vật đang di chuyển nhưng vận tốc mặt đất quá thấp (< 2 studs/s)
+    local groundVelocity = Vector3.new(rootPart.Velocity.X, 0, rootPart.Velocity.Z).Magnitude
+    if groundVelocity < 2 then
+        stuckTime = stuckTime + 0.05 -- Cộng dồn theo thời gian task.wait của vòng lặp
+        if stuckTime >= 0.4 then -- Nếu bị khựng quá 0.4 giây thì tiến hành nhảy vượt cản
+            humanoid.Jump = true
+            stuckTime = 0
+        end
+    else
+        stuckTime = math.max(0, stuckTime - 0.05) -- Reset dần nếu đang chạy mượt
     end
     
     -- 2. TÍNH ĐIỂM DỪNG (Chỉ tính khi ở ngoài tầm chém)
