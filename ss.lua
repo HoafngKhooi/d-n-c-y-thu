@@ -26,7 +26,6 @@ local TargetEnemy = nil -- Lưu trữ mục tiêu hiện tại để không qué
 
 local MapConfig = {
     ["Raided Village"] = {
-        -- Danh sách quái theo thứ tự ưu tiên
         Enemies = {
             "The Beast King",               
             "Beastmaster Joe & Abbadon",    
@@ -34,10 +33,9 @@ local MapConfig = {
             "Raider Punisher",              
             "Raider Magician"               
         },
-        -- Cập nhật danh sách các thư mục chứa vật cản, nền và tường chặn của Map
+        -- CHỈ GIỮ LẠI TƯỜNG VÀ VẬT CẢN (XÓA FLOORS ĐI)
         Obstacles = {
             workspace:FindFirstChild("DungeonMap"),
-            workspace:FindFirstChild("Floors"),
             workspace:FindFirstChild("MapBarriers")
         }
     }
@@ -64,7 +62,6 @@ local lastInitializedMap = nil
 local lastInitializedRoom = nil
 
 local function getSharedPath()
-    -- SỬA TẠI ĐÂY: Nếu trùng map VÀ trùng số phòng thì mới dùng lại Path cũ
     if globalPath and lastInitializedMap == CurrentMap and lastInitializedRoom == CurrentRoomIndex then 
         return globalPath 
     end
@@ -89,13 +86,17 @@ local function getSharedPath()
         AgentRadius = 2.5,
         AgentHeight = 5,
         AgentCanJump = true,
-        Costs = {},
+        Costs = {
+            -- Nếu map có khu vực Floor đặt tên riêng, ta set chi phí bằng 1 để AI bám sàn di chuyển mượt nhất
+            ["Part"] = 1,
+            ["Floor"] = 1
+        },
         Excludes = exclusionList
     }
     
     globalPath = PathfindingService:CreatePath(agentParams)
     lastInitializedMap = CurrentMap
-    lastInitializedRoom = CurrentRoomIndex -- Lưu lại số phòng vừa khởi tạo
+    lastInitializedRoom = CurrentRoomIndex 
     return globalPath
 end
 
