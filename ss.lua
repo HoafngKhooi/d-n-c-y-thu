@@ -43,6 +43,54 @@ local MapConfig = {
 
 local CurrentMap = "Raided Village"
 
+-- [[ HÀM KIỂM TRA VÀ TÌM VÙNG NÉ CHIÊU - ĐÃ TỐI ƯU CHỐNG DROP FPS ]]
+local function checkDangerZone()
+    local character = LocalPlayer.Character
+    local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return nil end
+
+    local dangerNames = { "Hitbox", "Indicator", "Part", "Aftershock" }
+    local checkList = {}
+    
+    -- 1. Quét nhanh ở các vùng bề nổi (Chỉ quét con trực tiếp, không đi sâu vô tận)
+    for _, v in pairs(workspace:GetChildren()) do
+        if table.find(dangerNames, v.Name) and v:IsA("BasePart") then
+            table.insert(checkList, v)
+        end
+    end
+    
+    -- 2. Quét các folder hiệu ứng phổ biến nếu có (ông có thể thêm tên folder của game vào đây)
+    local fxFolder = workspace:FindFirstChild("Visuals") or workspace:FindFirstChild("Effects") or workspace:FindFirstChild("Camera")
+    if fxFolder then
+        for _, v in pairs(fxFolder:GetChildren()) do
+            if table.find(dangerNames, v.Name) and v:IsA("BasePart") then
+                table.insert(checkList, v)
+            end
+        end
+    end
+    
+    -- 3. Quét vùng lưu trữ Nil ẩn
+    if typeof(getnilinstances) == "function" then
+        for _, v in pairs(getnilinstances()) do
+            if table.find(dangerNames, v.Name) and v:IsA("BasePart") then
+                table.insert(checkList, v)
+            end
+        end
+    end
+
+    -- Tính toán khoảng cách né chiêu
+    for _, zone in pairs(checkList) do
+        local distance = (rootPart.Position - zone.Position).Magnitude
+        -- Tự động lấy kích thước lớn nhất của trục X hoặc Z để làm bán kính vùng chiêu
+        local zoneRadius = math.max(zone.Size.X, zone.Size.Z) / 2
+        
+        if distance <= (zoneRadius + 4) then -- Đứng trong tầm chiêu + thêm 4 studs an toàn
+            return zone
+        end
+    end
+    return nil
+end
+
 -- Sửa lại hàm check quái một chút để khớp với cấu trúc mới
 local function isValidEnemy(enemyName)
     local mapData = MapConfig[CurrentMap]
@@ -119,23 +167,34 @@ local function moveToTargetSmooth(targetPart)
     local tPos = Vector3.new(targetPart.Position.X, 0, targetPart.Position.Z)
     local distanceToTarget = (pPos - tPos).Magnitude
     
-    -- TỐI ƯU CHỐNG NHẤP CHÂN
-    if distanceToTarget <= (attackRange + 1.5) then
-        humanoid:MoveTo(rootPart.Position) 
+        -- TỐI ƯU CHỐNG NHẤP CHÂN (ĐÃ SỬA: Không bắt ép đứng im tại chỗ để tránh kẹt vật lý)
+    if distanceToTarget <= (attackRange + 1.0) then
         stuckTime = 0
         return
     end
     
-    -- 1.5. CƠ CHẾ KIỂM TRA KẸT VẬT CẢN (ANTI-STUCK JUMP)
+    -- 1.5. CƠ CHẾ ANTI-STUCK NHẢY TIẾN (KHÓA ĐÀ TIẾN KHÔNG CHO KHỰNG TẠI CHỖ)
     local groundVelocity = Vector3.new(rootPart.Velocity.X, 0, rootPart.Velocity.Z).Magnitude
-    if groundVelocity < 2 then
+    if groundVelocity < 3 then
         stuckTime = stuckTime + 0.05
-        if stuckTime >= 0.4 then
-            humanoid.Jump = true
+        if stuckTime >= 0.4 then -- Nếu kẹt quá 0.4 giây
             stuckTime = 0
+            
+            -- Tính toán hướng lao tới vật cản/mục tiêu
+            local jumpDirection = (tPos - pPos).Unit
+            
+            -- Kích hoạt nhảy phá kẹt
+            humanoid.Jump = true
+            
+            -- Ép nhân vật điên cuồng lao về phía trước (Tạo đà tiến vượt gờ)
+            humanoid:MoveTo(rootPart.Position + jumpDirection * 10)
+            
+            -- KHÓA LUỒNG 0.25 giây để bảo vệ lực quán tính, không cho vòng lặp 0.05s làm mất đà
+            task.wait(0.25) 
+            return
         end
     else
-        stuckTime = math.max(0, stuckTime - 0.05)
+        stuckTime = math.max(0, stuckTime - 0.02)
     end
     
     -- 2. TÍNH ĐIỂM DỪNG
@@ -178,12 +237,27 @@ local function doAutoFarm()
         local rootPart = character and character:FindFirstChild("HumanoidRootPart")
         
         if humanoid and rootPart then
-            -- BƯỚC 1: KIỂM TRA MỤC TIÊU CŨ (Nếu quái cũ còn sống thì tiếp tục đi đấm, không quét lại)
+            -- BƯỚC 1: KIỂM TRA NÉ CHIÊU TRƯỚC, SAU ĐÓ MỚI ĐÁNH QUÁI
+            local dangerZone = checkDangerZone()
+            if dangerZone then
+                -- Tính toán hướng né: Di chuyển ngược hướng từ tâm chiêu thức lao ra ngoài
+                local dodgeDirection = (rootPart.Position - dangerZone.Position).Unit
+                local escapePosition = rootPart.Position + (dodgeDirection * 15) -- Giật lùi ra xa 15 studs
+                
+                humanoid:MoveTo(escapePosition)
+                -- Nếu vận tốc bằng 0 (bị khựng mép vùng chiêu), kích hoạt nhảy rướn để thoát
+                if rootPart.Velocity.Magnitude < 3 then
+                    humanoid.Jump = true
+                end
+                continue -- Khóa mục tiêu đánh, ưu tiên sống sót chạy ra ngoài
+            end
+
+            -- KIỂM TRA MỤC TIÊU CŨ (Nếu quái cũ còn sống và không có chiêu thì tiếp tục đấm)
             if TargetEnemy and TargetEnemy:FindFirstChild("HumanoidRootPart") then
                 local eHumanoid = TargetEnemy:FindFirstChildOfClass("Humanoid")
                 if eHumanoid and eHumanoid.Health > 0 then
                     moveToTargetSmooth(TargetEnemy.HumanoidRootPart)
-                    continue -- Bỏ qua đoạn dưới, giữ nguyên mục tiêu này
+                    continue 
                 end
             end
             
@@ -226,7 +300,7 @@ local function doAutoFarm()
                 end
             end
             
-            -- BƯỚC 3: XỬ LÝ KHI HẾT QUÁI (CHẾ ĐỘ SPEEDRUN AN TOÀN - KHÔNG KHỰNG)
+                        -- BƯỚC 3: XỬ LÝ KHI HẾT QUÁI (ĐÃ SỬA: Chống nhảy số phòng liên tục do loop 0.05s)
             if not TargetEnemy then
                 if barrier and barrier:IsA("BasePart") then
                     if barrier.CanCollide == true and barrier.Transparency < 0.5 then
@@ -235,18 +309,21 @@ local function doAutoFarm()
                         if CurrentRoomIndex < 7 then
                             local dashPosition = barrier.Position + (rootPart.CFrame.LookVector * 25)
                             
-                            -- Tách luồng di chuyển lao phòng để không làm nghẽn chu kỳ quét quái 0.05s
+                            -- Tăng số phòng và khóa luồng bằng cách tạo thời gian chờ nhân vật di chuyển qua cửa
+                            CurrentRoomIndex = CurrentRoomIndex + 1
+                            TargetEnemy = nil
+                            
                             task.spawn(function()
                                 humanoid:MoveTo(dashPosition)
                             end)
                             
-                            CurrentRoomIndex = CurrentRoomIndex + 1
-                            TargetEnemy = nil
+                            task.wait(1.5) -- Chờ 1.5 giây để nhân vật chạy hẳn qua phòng mới rồi mới tiếp tục quét quái
                         end
                     end
                 else
                     if CurrentRoomIndex < 7 then
                         CurrentRoomIndex = CurrentRoomIndex + 1
+                        task.wait(1.5) -- Khóa đuôi thời gian chờ nếu map không có barrier cụ thể
                     end
                 end
             end
