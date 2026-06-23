@@ -71,9 +71,14 @@ local function getSharedPath()
     }
     
     if mapData and mapData.Obstacles then
-        for _, obstacle in pairs(mapData.Obstacles) do
-            if obstacle then
-                agentParams.Costs[obstacle.Name] = math.huge
+        for _, obstacleContainer in pairs(mapData.Obstacles) do
+            if obstacleContainer then
+                agentParams.Costs[obstacleContainer.Name] = math.huge
+                for _, child in pairs(obstacleContainer:GetDescendants()) do
+                    if child:IsA("BasePart") then
+                        agentParams.Costs[child.Name] = math.huge
+                    end
+                end
             end
         end
     end
@@ -209,26 +214,27 @@ local function doAutoFarm()
                 end
             end
             
-            -- BƯỚC 3: XỬ LÝ KHI HẾT QUÁI (CHUYỂN ROOM)
+            -- BƯỚC 3: XỬ LÝ KHI HẾT QUÁI (CHẾ ĐỘ SPEEDRUN AN TOÀN - KHÔNG KHỰNG)
             if not TargetEnemy then
-                local roomName = "Room" .. tostring(CurrentRoomIndex)
-                local roomInfo = workspace:FindFirstChild("roomInformation")
-                local currentRoom = roomInfo and roomInfo:FindFirstChild(roomName)
-                local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
-                
-                if barrier and barrier:IsA("BasePart") and barrier.Transparency < 0.5 and barrier.CanCollide == true then
-                    -- Cửa chưa mở: Tiến ra đứng sát cửa chờ
-                    humanoid:MoveTo(barrier.Position)
-                else
-                    -- Cửa mở: Ép bước sâu qua phòng mới
-                    if CurrentRoomIndex < 7 then
-                        if barrier then
-                            humanoid:MoveTo(barrier.Position + (rootPart.CFrame.LookVector * 15)) -- Đi sâu vào trong 15 studs
+                if barrier and barrier:IsA("BasePart") then
+                    if barrier.CanCollide == true and barrier.Transparency < 0.5 then
+                        humanoid:MoveTo(barrier.Position)
+                    else
+                        if CurrentRoomIndex < 7 then
+                            local dashPosition = barrier.Position + (rootPart.CFrame.LookVector * 25)
+                            
+                            -- Tách luồng di chuyển lao phòng để không làm nghẽn chu kỳ quét quái 0.05s
+                            task.spawn(function()
+                                humanoid:MoveTo(dashPosition)
+                            end)
+                            
+                            CurrentRoomIndex = CurrentRoomIndex + 1
+                            TargetEnemy = nil
                         end
-                        
-                        -- SỬA TẠI ĐÂY: Chờ nhân vật ổn định vị trí và quái phòng mới kịp spawn trước khi tăng mã phòng
-                        task.wait(2.5) 
-                        CurrentRoomIndex = CurrentRoomIndex + 1 
+                    end
+                else
+                    if CurrentRoomIndex < 7 then
+                        CurrentRoomIndex = CurrentRoomIndex + 1
                     end
                 end
             end
