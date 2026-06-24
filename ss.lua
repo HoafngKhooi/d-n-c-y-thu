@@ -1,3 +1,5 @@
+-- loadstring(game:HttpGet("URL_LINK_RAW_CỦA_BẠN"))()
+
 -- [[ 1. KHỞI TẠO RAYFIELD UI ]]
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
