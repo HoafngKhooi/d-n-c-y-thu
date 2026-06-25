@@ -1,11 +1,9 @@
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/HoafngKhooi/d-n-c-y-thu/refs/heads/bot-discord/ss.lua"))()
-
 -- [[ 1. KHỞI TẠO RAYFIELD UI ]]
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Fabled Legacy - Auto Farm Test",
-   LoadingTitle = "Đang tải Script...",
+   Name = "Fabled Legacy - CrossPlatform Optimized",
+   LoadingTitle = "Đang cấu hình hệ thống tối ưu...",
    LoadingSubtitle = "by Bạn Chứ Ai",
    ConfigurationSaving = { Enabled = false },
    Discord = { Enabled = false },
@@ -18,13 +16,15 @@ local MainTab = Window:CreateTab("Main Farm", 4483362458)
 local _G = _G or {}
 _G.AutoFarm = false 
 
--- Các Service cần thiết (Sử dụng các biến local tối ưu tốc độ)
+-- Tối ưu hóa biến Local cấp cao (Tăng tốc xử lý trên Mobile)
 local Players = game:GetService("Players")
 local PathfindingService = game:GetService("PathfindingService")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 local CurrentRoomIndex = 1
 local TargetEnemy = nil 
+local CurrentMap = "Raided Village"
 
 local MapConfig = {
     ["Raided Village"] = {
@@ -35,92 +35,103 @@ local MapConfig = {
             "Raider Punisher",              
             "Raider Magician"               
         },
-        Obstacles = {
-            workspace:FindFirstChild("DungeonMap"),
-            workspace:FindFirstChild("MapBarriers")
-        }
+        Obstacles = {} -- Sẽ tự động nạp linh hoạt để tránh lag
     }
 }
 
-local CurrentMap = "Raided Village"
+-- Khởi tạo mảng vật cản an toàn
+local mapData = MapConfig[CurrentMap]
+if mapData then
+    local dbMap = workspace:FindFirstChild("DungeonMap")
+    local dbBarrier = workspace:FindFirstChild("MapBarriers")
+    if dbMap then table.insert(mapData.Obstacles, dbMap) end
+    if dbBarrier then table.insert(mapData.Obstacles, dbBarrier) end
+end
 
--- [[ HÀM KIỂM TRA VÀ TÌM VÙNG NÉ CHIÊU - ĐÃ BỎ NIL INSTANCES GÂY CRASH ]]
+-- Biến điều tiết hiệu năng (Performance Throttling)
+local lastDangerCheck = 0
+local lastEnemyScan = 0
+local lastPathComputed = 0
+local stuckTime = 0
+local globalPath = nil
+local lastInitializedMap = nil
+local lastInitializedRoom = nil
+
+-- [[ HÀM TÍNH TOÁN ĐỘ TRỄ DI ĐỘNG (DYNAMIC FPS WAIT) ]]
+local function getAdaptiveWait()
+    local fps = 1 / RunService.Heartbeat:Wait()
+    if fps < 30 then
+        return 0.15 -- Máy quá lag (Mobile cũ), giãn cách chạy để cứu máy
+    elseif fps < 50 then
+        return 0.08 -- Máy tầm trung (Mobile mới/PC yếu)
+    end
+    return 0.03 -- Máy mượt (PC khủng), tối đa hóa tốc độ farm
+end
+
+-- [[ HÀM TÌM VÙNG NÉ CHIÊU - GIỚI HẠN TẦN SUẤT QUÉT ]]
 local function checkDangerZone()
+    local currentTime = os.clock()
+    if currentTime - lastDangerCheck < 0.1 then return nil end -- Chặn quét liên tục gây nóng máy
+    lastDangerCheck = currentTime
+
     local character = LocalPlayer.Character
     local rootPart = character and character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return nil end
 
     local dangerNames = { "Hitbox", "Indicator", "Part", "Aftershock" }
-    local checkList = {}
-    
-    -- Quét nhanh ở Workspace
-    for _, v in ipairs(workspace:GetChildren()) do
-        if table.find(dangerNames, v.Name) and v:IsA("BasePart") then
-            table.insert(checkList, v)
-        end
-    end
-    
-    -- Quét folder hiệu ứng phổ biến
     local fxFolder = workspace:FindFirstChild("Visuals") or workspace:FindFirstChild("Effects") or workspace:FindFirstChild("Camera")
-    if fxFolder then
-        for _, v in ipairs(fxFolder:GetChildren()) do
-            if table.find(dangerNames, v.Name) and v:IsA("BasePart") then
-                table.insert(checkList, v)
-            end
-        end
-    end
+    
+    -- Gộp vùng quét gọn gàng nhất có thể
+    local sources = {workspace}
+    if fxFolder then table.insert(sources, fxFolder) end
 
-    -- Tính toán khoảng cách né chiêu an toàn
-    for _, zone in ipairs(checkList) do
-        if zone and zone:IsA("BasePart") then
-            local distance = (rootPart.Position - zone.Position).Magnitude
-            local zoneRadius = math.max(zone.Size.X, zone.Size.Z) / 2
-            
-            if distance <= (zoneRadius + 4) then 
-                return zone
+    for i = 1, #sources do
+        local source = sources[i]
+        local children = source:GetChildren()
+        for j = 1, #children do
+            local v = children[j]
+            if v:IsA("BasePart") and table.find(dangerNames, v.Name) then
+                local distance = (rootPart.Position - v.Position).Magnitude
+                local zoneRadius = math.max(v.Size.X, v.Size.Z) / 2
+                if distance <= (zoneRadius + 4) then 
+                    return v
+                end
             end
         end
     end
     return nil
 end
 
--- Sửa lại hàm check quái một chút để khớp với cấu trúc mới
 local function isValidEnemy(enemyName)
-    local mapData = MapConfig[CurrentMap]
-    if not mapData or not mapData.Enemies then return nil end
-    
-    for index, name in ipairs(mapData.Enemies) do
+    local data = MapConfig[CurrentMap]
+    if not data or not data.Enemies then return nil end
+    for index, name in ipairs(data.Enemies) do
         if enemyName == name then return index end
     end
     return nil
 end
 
--- [[ HÀM TÌM ĐƯỜNG ĐI (ĐÃ FIX KHÔNG BỊ RÒ RỈ BỘ NHỚ) ]]
-local stuckTime = 0
-local globalPath = nil
-local lastInitializedMap = nil
-local lastInitializedRoom = nil
-local lastPathComputed = 0 -- Biến chặn spam ComputeAsync
-
+-- [[ HÀM TÌM ĐƯỜNG ĐI (GIẢM TẢI BỘ NHỚ GIÚP MOBILE KHÔNG CRASH) ]]
 local function getSharedPath()
     if globalPath and lastInitializedMap == CurrentMap and lastInitializedRoom == CurrentRoomIndex then 
         return globalPath 
     end
     
-    -- Xóa path cũ nếu có để tránh tràn bộ nhớ
     if globalPath then
         globalPath:Destroy()
         globalPath = nil
     end
     
-    local mapData = MapConfig[CurrentMap]
+    local data = MapConfig[CurrentMap]
     local exclusionList = {}
     
-    if mapData and mapData.Obstacles then
-        for _, obstacleContainer in ipairs(mapData.Obstacles) do
+    if data and data.Obstacles then
+        for _, obstacleContainer in ipairs(data.Obstacles) do
             if obstacleContainer then
                 table.insert(exclusionList, obstacleContainer)
-                for _, child in ipairs(obstacleContainer:GetDescendants()) do
+                local descendants = obstacleContainer:GetDescendants()
+                for i = 1, #descendants do
+                    local child = descendants[i]
                     if child:IsA("BasePart") or child:IsA("Model") then
                         table.insert(exclusionList, child)
                     end
@@ -129,18 +140,14 @@ local function getSharedPath()
         end
     end
     
-    local agentParams = {
+    globalPath = PathfindingService:CreatePath({
         AgentRadius = 2.5,
         AgentHeight = 5,
         AgentCanJump = true,
-        Costs = {
-            ["Part"] = 1,
-            ["Floor"] = 1
-        },
+        Costs = { ["Part"] = 1, ["Floor"] = 1 },
         Excludes = exclusionList
-    }
+    })
     
-    globalPath = PathfindingService:CreatePath(agentParams)
     lastInitializedMap = CurrentMap
     lastInitializedRoom = CurrentRoomIndex 
     return globalPath
@@ -155,7 +162,6 @@ local function moveToTargetSmooth(targetPart)
     
     local attackRange = 7 
     local weaponHitbox = workspace:FindFirstChild("SwingHitboxAgony")
-    
     if weaponHitbox and weaponHitbox:IsA("BasePart") then
         attackRange = (weaponHitbox.Size.Z / 2) + 2
     end
@@ -169,47 +175,40 @@ local function moveToTargetSmooth(targetPart)
         return
     end
     
-    -- CƠ CHẾ ANTI-STUCK NHẢY TIẾN
-    local groundVelocity = Vector3.new(rootPart.Velocity.X, 0, rootPart.Velocity.Z).Magnitude
-    if groundVelocity < 3 then
+    -- CƠ CHẾ CHỐNG KẸT LUÂN PHIÊN
+    if rootPart.Velocity.Magnitude < 3 then
         stuckTime = stuckTime + 0.05
         if stuckTime >= 0.4 then 
             stuckTime = 0
-            local jumpDirection = (tPos - pPos).Unit
             humanoid.Jump = true
-            humanoid:MoveTo(rootPart.Position + jumpDirection * 10)
-            task.wait(0.25) 
+            humanoid:MoveTo(rootPart.Position + (tPos - pPos).Unit * 10)
+            task.wait(0.2) 
             return
         end
     else
         stuckTime = math.max(0, stuckTime - 0.02)
     end
     
-    local direction = (tPos - pPos).Unit
-    local stopPosition = targetPart.Position - (direction * attackRange)
-    
+    local stopPosition = targetPart.Position - ((tPos - pPos).Unit * attackRange)
     if distanceToTarget < 16 then
         humanoid:MoveTo(stopPosition)
         return
     end
     
-    -- ĐIỀU HƯỚNG NÉ TƯỜNG (CHỈ TÍNH TOÁN KHI QUÁ TỐI THIỂU 0.2 GIÂY TRÁNH SPAM)
-    local path = getSharedPath()
+    -- KIỂM SOÁT THỜI GIAN TÍNH ĐƯỜNG ĐI (DỰA VÀO CẤU HÌNH MÁY)
     local currentTime = os.clock()
+    local pathDelay = (rootPart.Velocity.Magnitude < 5) and 0.15 or 0.35 -- Nếu đứng im tính toán nhanh hơn để gỡ kẹt
     
-    if currentTime - lastPathComputed > 0.2 then
+    if currentTime - lastPathComputed > pathDelay then
         lastPathComputed = currentTime
-        local success, _ = pcall(function()
-            path:ComputeAsync(rootPart.Position, stopPosition)
-        end)
+        local path = getSharedPath()
+        local success, _ = pcall(function() path:ComputeAsync(rootPart.Position, stopPosition) end)
         
         if success and path.Status == Enum.PathStatus.Success then
             local waypoints = path:GetWaypoints()
             if waypoints and #waypoints > 1 then
                 local waypoint = waypoints[2]
-                if waypoint.Action == Enum.PathWaypointAction.Jump then
-                    humanoid.Jump = true
-                end
+                if waypoint.Action == Enum.PathWaypointAction.Jump then humanoid.Jump = true end
                 humanoid:MoveTo(waypoint.Position)
             end
         else
@@ -218,30 +217,26 @@ local function moveToTargetSmooth(targetPart)
     end
 end
 
--- [[ 3. LOGIC HÀM AUTO FARM TỐI ƯU ]]
+-- [[ 3. VÒNG LẶP CHÍNH ĐIỀU TIẾT THÔNG MINH ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(0.05) 
+        task.wait(getAdaptiveWait()) -- Tự co giãn thời gian chờ chống nóng máy Mobile
         
         local character = LocalPlayer.Character
         local humanoid = character and character:FindFirstChild("Humanoid")
         local rootPart = character and character:FindFirstChild("HumanoidRootPart")
         
         if humanoid and rootPart then
-            -- BƯỚC 1: KIỂM TRA NÉ CHIÊU
+            -- 1. ƯU TIÊN SỐNG SÓT: NÉ CHIÊU Boss
             local dangerZone = checkDangerZone()
             if dangerZone then
-                local dodgeDirection = (rootPart.Position - dangerZone.Position).Unit
-                local escapePosition = rootPart.Position + (dodgeDirection * 15) 
-                
+                local escapePosition = rootPart.Position + ((rootPart.Position - dangerZone.Position).Unit * 15) 
                 humanoid:MoveTo(escapePosition)
-                if rootPart.Velocity.Magnitude < 3 then
-                    humanoid.Jump = true
-                end
+                if rootPart.Velocity.Magnitude < 3 then humanoid.Jump = true end
                 continue 
             end
 
-            -- KIỂM TRA MỤC TIÊU CŨ
+            -- 2. DUY TRÌ MỤC TIÊU CŨ ĐỂ TIẾT KIỆM TÀI NGUYÊN
             if TargetEnemy and TargetEnemy:FindFirstChild("HumanoidRootPart") then
                 local eHumanoid = TargetEnemy:FindFirstChildOfClass("Humanoid")
                 if eHumanoid and eHumanoid.Health > 0 then
@@ -250,37 +245,40 @@ local function doAutoFarm()
                 end
             end
             
-            -- BƯỚC 2: QUÉT QUÁI MỚI
-            TargetEnemy = nil
-            local highestPriority = 999 
-            
-            local roomName = "Room" .. tostring(CurrentRoomIndex)
-            local roomInfo = workspace:FindFirstChild("roomInformation")
-            local currentRoom = roomInfo and roomInfo:FindFirstChild(roomName)
-            local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
-            
-            local enemiesFolder = workspace:FindFirstChild("Enemies")
-            if enemiesFolder then
-                for _, enemy in ipairs(enemiesFolder:GetChildren()) do
-                    if enemy:FindFirstChild("HumanoidRootPart") then
-                        local eHumanoid = enemy:FindFirstChildOfClass("Humanoid")
-                        if eHumanoid and eHumanoid.Health > 0 then
-                            
-                            local distToEnemy = (rootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
-                            local canAttack = true
-                            
-                            if barrier and barrier:IsA("BasePart") and barrier.CanCollide == true then
-                                local distToBarrier = (rootPart.Position - barrier.Position).Magnitude
-                                if distToEnemy > distToBarrier + 10 then 
-                                    canAttack = false 
+            -- 3. QUÉT QUÁI MỚI THEO CHU KỲ (CHỐNG SPAM TRÊN MOBILE)
+            local now = os.clock()
+            if now - lastEnemyScan > 0.15 or not TargetEnemy then
+                lastEnemyScan = now
+                TargetEnemy = nil
+                local highestPriority = 999 
+                
+                local roomInfo = workspace:FindFirstChild("roomInformation")
+                local currentRoom = roomInfo and roomInfo:FindFirstChild("Room" .. tostring(CurrentRoomIndex))
+                local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
+                local enemiesFolder = workspace:FindFirstChild("Enemies")
+                
+                if enemiesFolder then
+                    local enemies = enemiesFolder:GetChildren()
+                    for i = 1, #enemies do
+                        local enemy = enemies[i]
+                        if enemy:FindFirstChild("HumanoidRootPart") then
+                            local eHumanoid = enemy:FindFirstChildOfClass("Humanoid")
+                            if eHumanoid and eHumanoid.Health > 0 then
+                                local distToEnemy = (rootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+                                local canAttack = true
+                                
+                                if barrier and barrier:IsA("BasePart") and barrier.CanCollide == true then
+                                    if distToEnemy > (rootPart.Position - barrier.Position).Magnitude + 10 then 
+                                        canAttack = false 
+                                    end
                                 end
-                            end
-                            
-                            if canAttack and distToEnemy < 350 then 
-                                local priority = isValidEnemy(enemy.Name)
-                                if priority and priority < highestPriority then
-                                    highestPriority = priority
-                                    TargetEnemy = enemy
+                                
+                                if canAttack and distToEnemy < 350 then 
+                                    local priority = isValidEnemy(enemy.Name)
+                                    if priority and priority < highestPriority then
+                                        highestPriority = priority
+                                        TargetEnemy = enemy
+                                    end
                                 end
                             end
                         end
@@ -288,8 +286,12 @@ local function doAutoFarm()
                 end
             end
             
-            -- BƯỚC 3: XỬ LÝ KHI HẾT QUÁI
+            -- 4. CHUYỂN PHÒNG
             if not TargetEnemy then
+                local roomInfo = workspace:FindFirstChild("roomInformation")
+                local currentRoom = roomInfo and roomInfo:FindFirstChild("Room" .. tostring(CurrentRoomIndex))
+                local barrier = currentRoom and currentRoom:FindFirstChild("barrier")
+
                 if barrier and barrier:IsA("BasePart") then
                     if barrier.CanCollide == true and barrier.Transparency < 0.5 then
                         humanoid:MoveTo(barrier.Position)
@@ -298,17 +300,14 @@ local function doAutoFarm()
                             local dashPosition = barrier.Position + (rootPart.CFrame.LookVector * 25)
                             CurrentRoomIndex = CurrentRoomIndex + 1
                             TargetEnemy = nil
-                            
-                            task.spawn(function()
-                                humanoid:MoveTo(dashPosition)
-                            end)
-                            task.wait(1.5) 
+                            task.spawn(function() humanoid:MoveTo(dashPosition) end)
+                            task.wait(1.2) 
                         end
                     end
                 else
                     if CurrentRoomIndex < 7 then
                         CurrentRoomIndex = CurrentRoomIndex + 1
-                        task.wait(1.5) 
+                        task.wait(1.2) 
                     end
                 end
             end
@@ -323,32 +322,18 @@ MainTab:CreateToggle({
    Flag = "AutoFarmToggle", 
    Callback = function(Value)
       _G.AutoFarm = Value 
-      
       if Value then
           CurrentRoomIndex = 1 
           TargetEnemy = nil 
           task.spawn(doAutoFarm)
           Rayfield:Notify({
              Title = "Auto Farm",
-             Content = "Đã bật hệ thống Auto Farm mượt không gián đoạn!",
+             Content = "Hệ thống tối ưu đa nền tảng (PC/Mobile) khởi động!",
              Duration = 2,
              Image = 4483362458,
           })
       else
           TargetEnemy = nil
-          Rayfield:Notify({
-             Title = "Auto Farm",
-             Content = "Đã TẮT tự động di chuyển.",
-             Duration = 2,
-             Image = 4483362458,
-          })
       end
    end,
-})
-
-Rayfield:Notify({
-   Title = "Thành Công!",
-   Content = "Đã cập nhật thuật toán tối ưu chống crash!",
-   Duration = 3,
-   Image = 4483362458,
 })
