@@ -155,6 +155,7 @@ local function getSharedPath()
     return globalPath
 end
 
+-- [[ TỐI ƯU DI CHUYỂN MƯỢT MÀ - SPEEDRUN KHÔNG NHẤP NHÁY ]]
 local function moveToTargetSmooth(targetPart)
     local character = LocalPlayer.Character
     local humanoid = character and character:FindFirstChild("Humanoid")
@@ -172,36 +173,36 @@ local function moveToTargetSmooth(targetPart)
     local tPos = Vector3.new(targetPart.Position.X, 0, targetPart.Position.Z)
     local distanceToTarget = (pPos - tPos).Magnitude
     
-    if distanceToTarget <= (attackRange + 1.0) then
+    if distanceToTarget <= attackRange then
         stuckTime = 0
         return
     end
     
-    -- CƠ CHẾ CHỐNG KẸT LUÂN PHIÊN
-    if rootPart.Velocity.Magnitude < 3 then
+    -- Cơ chế chống kẹt cải tiến
+    if rootPart.Velocity.Magnitude < 2 then
         stuckTime = stuckTime + 0.05
-        if stuckTime >= 0.4 then 
+        if stuckTime >= 0.5 then 
             stuckTime = 0
             humanoid.Jump = true
-            humanoid:MoveTo(rootPart.Position + (tPos - pPos).Unit * 10)
-            task.wait(0.2) 
+            humanoid:MoveTo(rootPart.Position + (tPos - pPos).Unit * 12)
+            task.wait(0.1)
             return
         end
     else
         stuckTime = math.max(0, stuckTime - 0.02)
     end
     
-    local stopPosition = targetPart.Position - ((tPos - pPos).Unit * attackRange)
-    if distanceToTarget < 16 then
+    local stopPosition = targetPart.Position - ((tPos - pPos).Unit * (attackRange - 1))
+    
+    -- PHÂN PHỐI ĐƯỜNG ĐI: Nếu khoảng cách gần (< 25 studs), đi thẳng luôn để tránh nhấp nhấp do Pathfinding quét lại
+    if distanceToTarget < 25 then
         humanoid:MoveTo(stopPosition)
         return
     end
     
-    -- KIỂM SOÁT THỜI GIAN TÍNH ĐƯỜNG ĐI (DỰA VÀO CẤU HÌNH MÁY)
+    -- Nếu ở xa, dùng Pathfinding nhưng mượt hơn nhờ giảm delay phản xạ
     local currentTime = os.clock()
-    local pathDelay = (rootPart.Velocity.Magnitude < 5) and 0.15 or 0.35 -- Nếu đứng im tính toán nhanh hơn để gỡ kẹt
-    
-    if currentTime - lastPathComputed > pathDelay then
+    if currentTime - lastPathComputed > 0.25 then
         lastPathComputed = currentTime
         local path = getSharedPath()
         local success, _ = pcall(function() path:ComputeAsync(rootPart.Position, stopPosition) end)
@@ -209,9 +210,12 @@ local function moveToTargetSmooth(targetPart)
         if success and path.Status == Enum.PathStatus.Success then
             local waypoints = path:GetWaypoints()
             if waypoints and #waypoints > 1 then
+                -- Ưu tiên đi tới waypoint tiếp theo liền mạch
                 local waypoint = waypoints[2]
                 if waypoint.Action == Enum.PathWaypointAction.Jump then humanoid.Jump = true end
                 humanoid:MoveTo(waypoint.Position)
+            else
+                humanoid:MoveTo(stopPosition)
             end
         else
             humanoid:MoveTo(stopPosition)
@@ -222,14 +226,14 @@ end
 -- [[ 3. VÒNG LẶP CHÍNH ĐIỀU TIẾT THÔNG MINH ]]
 local function doAutoFarm()
     while _G.AutoFarm do
-        task.wait(getAdaptiveWait()) -- Tự co giãn thời gian chờ chống nóng máy Mobile
+        task.wait(getAdaptiveWait())
         
         local character = LocalPlayer.Character
         local humanoid = character and character:FindFirstChild("Humanoid")
         local rootPart = character and character:FindFirstChild("HumanoidRootPart")
         
         if humanoid and rootPart then
-            -- 1. ƯU TIÊN SỐNG SÓT: NÉ CHIÊU Boss
+            -- 1. ƯU TIÊN SỐNG SÓT: NÉ CHIÊU
             local dangerZone = checkDangerZone()
             if dangerZone then
                 local escapePosition = rootPart.Position + ((rootPart.Position - dangerZone.Position).Unit * 15) 
@@ -238,7 +242,7 @@ local function doAutoFarm()
                 continue 
             end
 
-            -- 2. DUY TRÌ MỤC TIÊU CŨ ĐỂ TIẾT KIỆM TÀI NGUYÊN
+            -- 2. DUY TRÌ MỤC TIÊU CŨ (Nếu mục tiêu vẫn còn sống và ở gần)
             if TargetEnemy and TargetEnemy:FindFirstChild("HumanoidRootPart") then
                 local eHumanoid = TargetEnemy:FindFirstChildOfClass("Humanoid")
                 if eHumanoid and eHumanoid.Health > 0 then
@@ -247,12 +251,13 @@ local function doAutoFarm()
                 end
             end
             
-            -- 3. QUÉT QUÁI MỚI THEO CHU KỲ (CHỐNG SPAM TRÊN MOBILE)
+            -- 3. QUÉT QUÁI MỚI - ƯU TIÊN KHOẢNG CÁCH GẦN NHẤT
             local now = os.clock()
-            if now - lastEnemyScan > 0.15 or not TargetEnemy then
+            if now - lastEnemyScan > 0.1 or not TargetEnemy then
                 lastEnemyScan = now
-                TargetEnemy = nil
-                local highestPriority = 999 
+                
+                local closestEnemy = nil
+                local shortestDistance = 999999 -- Khởi tạo khoảng cách vô tận ban đầu
                 
                 local roomInfo = workspace:FindFirstChild("roomInformation")
                 local currentRoom = roomInfo and roomInfo:FindFirstChild("Room" .. tostring(CurrentRoomIndex))
@@ -263,32 +268,35 @@ local function doAutoFarm()
                     local enemies = enemiesFolder:GetChildren()
                     for i = 1, #enemies do
                         local enemy = enemies[i]
-                        if enemy:FindFirstChild("HumanoidRootPart") then
+                        if enemy:FindFirstChild("HumanoidRootPart") and isValidEnemy(enemy.Name) then
                             local eHumanoid = enemy:FindFirstChildOfClass("Humanoid")
                             if eHumanoid and eHumanoid.Health > 0 then
                                 local distToEnemy = (rootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
                                 local canAttack = true
                                 
+                                -- Chặn tường chắn phòng
                                 if barrier and barrier:IsA("BasePart") and barrier.CanCollide == true then
                                     if distToEnemy > (rootPart.Position - barrier.Position).Magnitude + 10 then 
                                         canAttack = false 
                                     end
                                 end
                                 
-                                if canAttack and distToEnemy < 350 then 
-                                    local priority = isValidEnemy(enemy.Name)
-                                    if priority and priority < highestPriority then
-                                        highestPriority = priority
-                                        TargetEnemy = enemy
-                                    end
+                                -- Tìm quái GẦN NHẤT thỏa mãn điều kiện
+                                if canAttack and distToEnemy < shortestDistance then
+                                    shortestDistance = distToEnemy
+                                    closestEnemy = enemy
                                 end
                             end
                         end
                     end
                 end
+                
+                if closestEnemy then
+                    TargetEnemy = closestEnemy
+                end
             end
             
-            -- 4. CHUYỂN PHÒNG
+            -- 4. CHUYỂN PHÒNG KHÔNG ĐỔI
             if not TargetEnemy then
                 local roomInfo = workspace:FindFirstChild("roomInformation")
                 local currentRoom = roomInfo and roomInfo:FindFirstChild("Room" .. tostring(CurrentRoomIndex))
@@ -303,13 +311,13 @@ local function doAutoFarm()
                             CurrentRoomIndex = CurrentRoomIndex + 1
                             TargetEnemy = nil
                             task.spawn(function() humanoid:MoveTo(dashPosition) end)
-                            task.wait(1.2) 
+                            task.wait(1.0) 
                         end
                     end
                 else
                     if CurrentRoomIndex < 7 then
                         CurrentRoomIndex = CurrentRoomIndex + 1
-                        task.wait(1.2) 
+                        task.wait(0.5) 
                     end
                 end
             end
@@ -330,7 +338,7 @@ MainTab:CreateToggle({
           task.spawn(doAutoFarm)
           Rayfield:Notify({
              Title = "Auto Farm",
-             Content = "Hệ thống tối ưu đa nền tảng (PC/Mobile) khởi động!",
+             Content = "Đã tối ưu hóa Speedrun đường đi & Ưu tiên quái gần!",
              Duration = 2,
              Image = 4483362458,
           })
