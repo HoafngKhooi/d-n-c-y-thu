@@ -1,3 +1,0 @@
-disnake
-flask
-groq
