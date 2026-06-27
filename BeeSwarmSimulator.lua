@@ -1,13 +1,14 @@
+-- Sử dụng loadstring chuẩn cho Rayfield
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local player = Players.LocalPlayer
-local canDoubleJump = false
-local isGliderEnabled = false
 
--- 1. Setup Giao diện Rayfield
+local isGliderEnabled = false
+local canDoubleJump = false
+
+-- Khởi tạo Window (Không cần gọi LoadInterface nữa)
 local Window = Rayfield:CreateWindow({
    Name = "Glider Master",
    LoadingTitle = "Đang khởi tạo...",
@@ -24,30 +25,7 @@ Tab:CreateToggle({
    end,
 })
 
--- 2. Hàm Gắn dù vào nhân vật
-local function equipGlider()
-    local character = player.Character
-    if not character then return end
-    
-    -- Kiểm tra nếu đã có dù thì không tạo thêm
-    if character:FindFirstChild("Glider") then return end
-    
-    local gliderTemplate = ReplicatedStorage:FindFirstChild("Glider")
-    if gliderTemplate then
-        local clone = gliderTemplate:Clone()
-        -- Gắn vào lưng hoặc HumanoidRootPart
-        local weld = Instance.new("WeldConstraint")
-        weld.Part0 = clone
-        weld.Part1 = character:WaitForChild("HumanoidRootPart")
-        clone.Parent = character
-        weld.Parent = clone
-        
-        -- Căn chỉnh tọa độ dù (chỉnh sửa Vector3 nếu dù bị lệch)
-        clone.CFrame = character.HumanoidRootPart.CFrame * CFrame.new(0, 0.5, 0.5)
-    end
-end
-
--- 3. Logic Nhảy kép
+-- Logic xử lý nhảy kép
 UserInputService.JumpRequest:Connect(function()
     if not isGliderEnabled then return end
     
@@ -55,13 +33,19 @@ UserInputService.JumpRequest:Connect(function()
     local humanoid = character and character:FindFirstChild("Humanoid")
     
     if humanoid and canDoubleJump then
-        canDoubleJump = false -- Reset trạng thái
-        equipGlider()         -- Gọi hàm gắn dù
+        canDoubleJump = false 
         humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        
+        -- Thông báo thay vì cố gắng Clone vật phẩm bị game chặn
+        Rayfield:Notify({
+            Title = "Nhảy kép!",
+            Content = "Đã kích hoạt trạng thái dù.",
+            Duration = 3,
+        })
     end
 end)
 
--- Theo dõi trạng thái nhảy
+-- Cập nhật trạng thái khi ở trên không
 player.CharacterAdded:Connect(function(char)
     local humanoid = char:WaitForChild("Humanoid")
     humanoid.StateChanged:Connect(function(_, newState)
@@ -72,19 +56,3 @@ player.CharacterAdded:Connect(function(char)
         end
     end)
 end)
-
--- Khởi tạo lần đầu
-if player.Character then
-    local humanoid = player.Character:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.StateChanged:Connect(function(_, newState)
-            if newState == Enum.HumanoidStateType.Landed then
-                canDoubleJump = false
-            elseif newState == Enum.HumanoidStateType.Freefall then
-                canDoubleJump = true
-            end
-        end)
-    end
-end
-
-Rayfield:LoadInterface()
