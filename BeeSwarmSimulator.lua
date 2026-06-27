@@ -1,19 +1,30 @@
--- Bỏ qua giao diện, chỉ test logic nhảy
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-local Humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+-- TỰ ĐỘNG CHỜ GAME LOAD
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.Players.LocalPlayer.Character
 
-print("--- Test Auto Jump Start ---")
+-- Dùng thư viện Rayfield đã được local hóa (để tránh lỗi loadstring)
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/UI-Lib/Rayfield/main/Source.lua'))()
 
-RunService.RenderStepped:Connect(function()
-    local Char = LocalPlayer.Character
-    if Char and Char:FindFirstChild("Humanoid") then
-        local H = Char.Humanoid
-        -- Nếu trạng thái là Landed, thực hiện nhảy
-        if H:GetState() == Enum.HumanoidStateType.Landed then
-            H.Jump = true
-            print("Đã phát hiện chạm đất và thực hiện nhảy!")
+local Window = Rayfield:CreateWindow({Name = "Tryhard Movement"})
+local Tab = Window:CreateTab("Movement")
+
+local _G.AutoJump = false
+
+-- LOGIC NHẢY (Tối ưu nhất)
+game:GetService("RunService").RenderStepped:Connect(function()
+    if _G.AutoJump then
+        local Humanoid = game.Players.LocalPlayer.Character:FindFirstChild("Humanoid")
+        if Humanoid and Humanoid:GetState() == Enum.HumanoidStateType.Landed then
+            task.wait(0.01) -- Độ trễ cực thấp
+            Humanoid.Jump = true
         end
     end
 end)
+
+Tab:CreateToggle({
+    Name = "Auto-Jump Reset",
+    CurrentValue = false,
+    Callback = function(Value)
+        _G.AutoJump = Value
+    end,
+})
