@@ -1,67 +1,27 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
+local Events = require(game:GetService("ReplicatedStorage"):WaitForChild("Events")) -- Đường dẫn đến module Events bạn vừa tìm
 
--- Khởi tạo MasterControl
-local MasterControl = require(player:WaitForChild("PlayerScripts"):WaitForChild("ControlScript"):WaitForChild("MasterControl"))
-
--- Biến điều khiển
-_G.DoubleJumpEnabled = false
-local canDoubleJump = false
-
--- 1. Setup UI Rayfield
-local Window = Rayfield:CreateWindow({
-   Name = "Glider Master Pro",
-   LoadingTitle = "Đang tải hệ thống...",
-   Theme = "Default"
-})
-
+local Window = Rayfield:CreateWindow({Name = "Glider Master", Theme = "Default"})
 local Tab = Window:CreateTab("Chức năng", nil)
 
 Tab:CreateToggle({
-   Name = "Bật Nhảy Kép (Double Jump)",
+   Name = "Kích hoạt Dù (Sử dụng Remote)",
    CurrentValue = false,
    Callback = function(Value)
-      _G.DoubleJumpEnabled = Value
+      _G.GliderEnabled = Value
    end,
 })
 
--- 2. Logic Nhảy kép
+-- Logic Nhảy: Thay vì gọi DoJump(), ta gọi qua Events module
+local UserInputService = game:GetService("UserInputService")
+local player = game:GetService("Players").LocalPlayer
+
 UserInputService.JumpRequest:Connect(function()
-    if not _G.DoubleJumpEnabled then return end
+    if not _G.GliderEnabled then return end
     
-    local humanoid = MasterControl:GetHumanoid()
-    if not humanoid then return end
-
-    if humanoid:GetState() == Enum.HumanoidStateType.Freefall and canDoubleJump then
-        canDoubleJump = false 
-        MasterControl:DoJump() 
-        
-        Rayfield:Notify({
-            Title = "Thành công",
-            Content = "Đã thực hiện Double Jump!",
-            Duration = 2,
-        })
-    end
-end)
-
--- 3. Reset trạng thái khi tiếp đất
-local function setupCharacter(char)
-    local humanoid = char:WaitForChild("Humanoid")
-    humanoid.StateChanged:Connect(function(_, newState)
-        if newState == Enum.HumanoidStateType.Landed then
-            canDoubleJump = true 
-        end
+    -- Gửi tín hiệu qua RemoteEvent
+    -- Lưu ý: Bạn cần thay "TênEventDù" bằng tên thật bạn thấy trong Dex (VD: "Glider", "UseItem")
+    pcall(function()
+        Events.ClientCall("Glider", "Equip") -- Thử gọi với tham số "Equip"
     end)
-end
-
--- Đăng ký sự kiện nhân vật
-player.CharacterAdded:Connect(setupCharacter)
-if player.Character then setupCharacter(player.Character) end
-
-Rayfield:Notify({
-    Title = "Hệ thống sẵn sàng",
-    Content = "Hãy bật toggle để bắt đầu nhảy kép.",
-    Duration = 5,
-})
+end)
