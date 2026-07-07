@@ -1,0 +1,13 @@
+git clone https://github.com/agentscope-ai/agentscope
+git clone https://github.com/aider-ai/aider
+git clone https://github.com/Alishahryar1/free-claude-code
+git clone https://github.com/foundationagents/metagpt
+git clone https://github.com/leonxlnx/taste-skill
+git clone https://github.com/lightpanda-io/browser
+git clone https://github.com/nidhinjs/prompt-master
+git clone https://github.com/pbakaus/impeccable
+git clone https://github.com/Shubhamsaboo/awesome-llm-apps
+git clone https://github.com/SpriteCook/skills
+git clone https://github.com/tashfeenahmed/freellmapi
+git clone https://github.com/msitarzewski/agency-agents
+git clone https://github.com/crewaiinc/crewai
