@@ -10,3 +10,5 @@ android/local.properties
 android/.gradle/
 android/build/
 www/
+libs/build/
+android/app/build/
