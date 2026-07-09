@@ -20,7 +20,6 @@ def get_dir_size(path='.'):
     return round(total_size / (1024 * 1024), 2)
 
 def is_binary_file(file_path):
-    """Kiểm tra nhanh xem file có phải là file nhị phân không để tránh lỗi decode."""
     try:
         with open(file_path, 'tr', encoding='utf-8') as f:
             f.read(1024)
@@ -28,53 +27,54 @@ def is_binary_file(file_path):
     except UnicodeDecodeError:
         return True
 
+def get_project_structure(root_path="."):
+    structure = ["| Tên thành phần | Loại |", "| :--- | :--- |"]
+    ignore = {'.git', '__pycache__', 'node_modules', '.env', 'PENGUIN_MANIFEST.md', 'error.log', 'project_code_bundle.txt'}
+    for root, dirs, files in os.walk(root_path):
+        dirs[:] = [d for d in dirs if d not in ignore]
+        rel_path = os.path.relpath(root, root_path)
+        level = 0 if rel_path == '.' else rel_path.count(os.sep) + 1
+        indent = "&nbsp;&nbsp;" * level
+        folder_name = os.path.basename(root)
+        if rel_path == '.':
+            folder_name = os.path.basename(os.path.abspath(root_path)) or 'Root'
+        structure.append(f"| {indent}📂 **{folder_name}/** | Directory |")
+        for f in files:
+            if f not in ignore:
+                structure.append(f"| {indent}&nbsp;&nbsp;📄 {f} | File |")
+    return structure
+
 def generate_code_bundle(root_path="."):
     bundle_filename = "project_code_bundle.txt"
     bundle_file = os.path.join(root_path, bundle_filename)
+    MAX_FILE_SIZE = 100 * 1024 
     
-    ignore = {'.git', '__pycache__', 'node_modules', '.env', 'check.py', 'PENGUIN_MANIFEST.md', 'error.log', bundle_filename}
+    ignore = {'.git', '__pycache__', 'node_modules', '.env', 'check.py', 
+              'PENGUIN_MANIFEST.md', 'error.log', bundle_filename, '.DS_Store'}
     
     with open(bundle_file, "w", encoding="utf-8") as outfile:
         outfile.write(f"PROJECT CODE BUNDLE - {datetime.now()}\n{'='*50}\n\n")
-        outfile.write(f"Source Directory: {os.path.abspath(root_path)}\n\n")
-        
         for root, dirs, files in os.walk(root_path):
             dirs[:] = [d for d in dirs if d not in ignore]
             for f in files:
                 if f not in ignore:
                     file_path = os.path.join(root, f)
+                    file_size = os.path.getsize(file_path)
+                    
+                    if file_size > MAX_FILE_SIZE:
+                        outfile.write(f"\n\n--- SKIPPED (Too large: {file_size/1024:.1f} KB): {file_path} ---\n")
+                        continue
                     
                     if is_binary_file(file_path):
                         continue
                         
-                    outfile.write(f"\n\n--- FILE: {file_path} ---\n\n")
+                    outfile.write(f"\n\n--- FILE: {file_path} ({file_size/1024:.1f} KB) ---\n\n")
                     try:
                         with open(file_path, "r", encoding="utf-8") as infile:
                             outfile.write(infile.read())
                     except Exception as e:
                         outfile.write(f"Could not read file: {e}")
     return bundle_file
-
-def get_project_structure(root_path="."):
-    structure = ["| Tên thành phần | Loại |", "| :--- | :--- |"]
-    ignore = {'.git', '__pycache__', 'node_modules', '.env', 'PENGUIN_MANIFEST.md', 'error.log', 'project_code_bundle.txt'}
-    
-    for root, dirs, files in os.walk(root_path):
-        dirs[:] = [d for d in dirs if d not in ignore]
-        # Tính toán mức độ thục lề dựa trên root_path thay vì '.'
-        rel_path = os.path.relpath(root, root_path)
-        level = 0 if rel_path == '.' else rel_path.count(os.sep) + 1
-        
-        indent = "&nbsp;&nbsp;" * level
-        folder_name = os.path.basename(root)
-        if rel_path == '.':
-            folder_name = os.path.basename(os.path.abspath(root_path)) or 'Root'
-            
-        structure.append(f"| {indent}📂 **{folder_name}/** | Directory |")
-        for f in files:
-            if f not in ignore:
-                structure.append(f"| {indent}&nbsp;&nbsp;📄 {f} | File |")
-    return structure
 
 def check_project(target_path="."):
     print(f"{Color.BLUE}--- HỆ THỐNG PENGUIN ({datetime.now().strftime('%H:%M:%S')}) ---{Color.END}")

@@ -1,4 +1,5 @@
 crewai
+crewai-tools
 pydantic
 python-dotenv
 discord.py
