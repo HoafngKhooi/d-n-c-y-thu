@@ -104,7 +104,7 @@ const officeUI = {
     return `
       <div class="office-error">
         <p>⚠️ Không thể kết nối đến Pixel Agents Server</p>
-        <p>Đảm bảo rằng server đang chạy tại: http://127.0.0.1:8001</p>
+        <p>Đảm bảo rằng server đang chạy tại: http://127.0.0.1:46699</p>
         <button class="btn btn-primary" onclick="location.reload()">Thử lại</button>
       </div>
     `;

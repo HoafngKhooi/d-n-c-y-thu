@@ -4,7 +4,7 @@
  */
 
 class PixelAgentsClient {
-  constructor(baseUrl = 'https://flatware-expire-pacify.ngrok-free.app') {
+  constructor(baseUrl = 'http://127.0.0.1:46699') {
     this.baseUrl = baseUrl;
     this.connected = false;
     this.agents = [];
@@ -77,10 +77,7 @@ class PixelAgentsClient {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: this.messageHistory.map(msg => ({
-            role: msg.role,
-            content: msg.content
-          })),
+          messages: this.messageHistory.map(msg => ({\n            role: msg.role,\n            content: msg.content\n          })),
           model: 'claude-3-5-sonnet-20241022',
           temperature: 0.7,
           max_tokens: 2048
