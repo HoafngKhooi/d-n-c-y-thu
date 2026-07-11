@@ -1,0 +1,112 @@
+{
+    "google": [
+        {
+            "key": "AIzaSy_Google_Studio_Free_Key",
+            "type": "free",
+            "priority": 1,
+            "status": "active",
+            "error_count": 0,
+            "last_used": "2026-07-11 18:17:39",
+            "note": "Khung chứa Key Google AI Studio (Gồm cả Gemini và Gemma)",
+            "supported_models": {
+                "gemini-3.5-flash": {
+                    "rpm": 5,
+                    "rpd": 20,
+                    "tpm": 250000
+                },
+                "gemini-3-flash-preview": {
+                    "rpm": 5,
+                    "rpd": 20,
+                    "tpm": 250000
+                },
+                "gemini-3.1-flash-lite": {
+                    "rpm": 15,
+                    "rpd": 500,
+                    "tpm": 250000
+                },
+                "gemini-2.5-flash": {
+                    "rpm": 5,
+                    "rpd": 20,
+                    "tpm": 250000
+                },
+                "gemini-2.5-flash-lite": {
+                    "rpm": 10,
+                    "rpd": 20,
+                    "tpm": 250000
+                },
+                "gemini-3.1-flash-tts-preview": {
+                    "rpm": 3,
+                    "rpd": 10,
+                    "tpm": 10000
+                },
+                "gemini-2.5-flash-preview-tts": {
+                    "rpm": 3,
+                    "rpd": 10,
+                    "tpm": 10000
+                },
+                "gemini-robotics-er-1.6-preview": {
+                    "rpm": 5,
+                    "rpd": 20,
+                    "tpm": 250000
+                },
+                "gemini-robotics-er-1.5-preview": {
+                    "rpm": 10,
+                    "rpd": 20,
+                    "tpm": 250000
+                },
+                "gemma-3-27b-it": {
+                    "rpm": 30,
+                    "rpd": 14400,
+                    "tpm": 15000
+                },
+                "gemma-3-12b-it": {
+                    "rpm": 30,
+                    "rpd": 14400,
+                    "tpm": 15000
+                },
+                "gemma-3-4b-it": {
+                    "rpm": 30,
+                    "rpd": 14400,
+                    "tpm": 15000
+                },
+                "gemma-3-1b-it": {
+                    "rpm": 30,
+                    "rpd": 14400,
+                    "tpm": 15000
+                }
+            }
+        },
+        {
+            "key": "AIzaSy_Google_Studio_Paid_Key",
+            "type": "paid",
+            "priority": 2,
+            "status": "active",
+            "error_count": 0,
+            "last_used": "2026-07-11 18:17:39",
+            "note": "Key trả phí dự phòng khi tài khoản free cạn kiệt",
+            "supported_models": "all"
+        }
+    ],
+    "openai": [
+        {
+            "key": "sk-proj-Free_Key_1",
+            "type": "free",
+            "priority": 1,
+            "status": "active",
+            "error_count": 0,
+            "last_used": null,
+            "note": "Key OpenAI Free"
+        }
+    ],
+    "claude": [
+        {
+            "key": "sk-ant-Paid_Key_1",
+            "type": "paid",
+            "priority": 2,
+            "status": "active",
+            "error_count": 0,
+            "last_used": null,
+            "note": "Key Claude Pro"
+        }
+    ]
+}

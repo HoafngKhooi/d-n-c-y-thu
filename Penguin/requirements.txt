@@ -3,3 +3,6 @@ crewai-tools
 pydantic
 python-dotenv
 discord.py
+fastapi
+uvicorn
+python-multipart

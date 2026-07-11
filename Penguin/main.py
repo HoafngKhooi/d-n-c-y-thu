@@ -1,32 +1,28 @@
-from flask import Flask, send_from_directory, request, jsonify
+# Simple main.py that demonstrates the AI agent
+from ai_agent import IntegratedAIAgent
 
-# Khởi tạo Flask, trỏ tới thư mục 'www'
-app = Flask(__name__, static_folder='www')
+def main():
+    print("Integrated AI Agent Demo")
+    print("=" * 40)
+    agent = IntegratedAIAgent()
+    status = agent.get_system_status()
+    print(f"LLM Resources: {"Available" if status["llm_resources"]["available"] else "Not Available"}")
+    print(f"Ponytail Skills: {"Available" if status["ponytail_skills"]["available"] else "Not Available"}")
+    print(f"FCC Proxy: {"Available" if status["free_claude_code_proxy"]["available"] else "Not Available"}")
 
-# Route chính: Truy cập trang chủ
-@app.route('/')
-def index():
-    return send_from_directory('www', 'index.html')
+    print("\nAvailable Providers:")
+    providers = agent.llm_resources.list_available_providers()
+    for provider in providers[:5]:
+        print(f"  - {provider}")
+    if len(providers) > 5:
+        print(f"  ... and {len(providers) - 5} more")
 
-# Route cho các file tĩnh (CSS, JS, v.v.)
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory('www', path)
+    print("\nExample Task:")
+    result = agent.execute_agent_task("Analyze customer feedback sentiment")
+    print(f"Task: {result["task"]}")
+    print(f"Safety: {result["safety_constraints"]}")
 
-# --- CÁC ĐIỂM NỐI API (Backend Logic) ---
+    print("\nAI Agent ready for use!")
 
-# Ví dụ: Xử lý tin nhắn từ frontend
-@app.route('/api/chat', methods=['POST'])
-def chat():
-    data = request.json
-    user_message = data.get('message')
-    
-    # Ở đây bạn sẽ gọi AI hoặc logic xử lý của bạn
-    response = f"Server đã nhận tin nhắn: {user_message}"
-    
-    return jsonify({"reply": response})
-
-if __name__ == '__main__':
-    print("Server đang chạy tại: http://localhost:5000")
-    app.run(debug=True, port=5000)
-
+if __name__ == "__main__":
+    main()
