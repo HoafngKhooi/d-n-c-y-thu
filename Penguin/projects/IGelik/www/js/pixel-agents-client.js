@@ -4,7 +4,7 @@
  */
 
 class PixelAgentsClient {
-  constructor(baseUrl = 'http://127.0.0.1:8001') {
+  constructor(baseUrl = 'https://flatware-expire-pacify.ngrok-free.app') {
     this.baseUrl = baseUrl;
     this.connected = false;
     this.agents = [];

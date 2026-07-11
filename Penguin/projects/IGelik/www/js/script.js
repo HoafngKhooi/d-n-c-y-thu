@@ -22,34 +22,30 @@ function navigateTo(viewId) {
     }
 }
 
-function sendMessage() {
+async function sendMessage() {
     const input = document.getElementById('user-input');
     const messageText = input.value.trim();
-    
-    if (!localStorage.getItem('currentUser')) {
-        alert("Vui lòng đăng nhập để gửi tin nhắn!");
-        openAuthModal();
-        return;
-    }
-    
-    if (messageText !== "") {
-        const chatWindow = document.getElementById('chat-window');
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'chat-msg';
+
+    if (messageText === "") return;
+
+    // 1. Hiển thị tin nhắn người dùng (như cũ)
+    appendMessage("Bạn", messageText);
+    input.value = "";
+
+    // 2. Gửi tới main.py (Backend)
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: messageText })
+        });
         
-        const senderB = document.createElement('b');
-        senderB.textContent = "Bạn: ";
+        const data = await response.json();
         
-        const textSpan = document.createElement('span');
-        textSpan.textContent = messageText; 
-        
-        msgDiv.appendChild(senderB);
-        msgDiv.appendChild(textSpan);
-        chatWindow.appendChild(msgDiv);
-        
-        input.value = "";
-        input.focus();
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        // 3. Hiển thị phản hồi từ Server
+        appendMessage("AI", data.reply);
+    } catch (error) {
+        console.error("Lỗi kết nối server:", error);
     }
 }
 
