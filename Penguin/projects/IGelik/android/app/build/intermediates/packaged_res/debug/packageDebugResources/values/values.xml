@@ -2,9 +2,16 @@
 <resources>
     <color name="ic_launcher_background">#FFFFFF</color>
     <string name="app_name">IGelik</string>
+    <string name="battery_optimization_explanation">
+        To ensure the virtual space continues running smoothly in the background, 
+        please whitelist this app from battery optimization. This prevents the system 
+        from stopping the virtual space when the app is in the background.
+    </string>
     <string name="custom_url_scheme">com.igelik.app</string>
     <string name="package_name">com.igelik.app</string>
     <string name="title_activity_main">IGelik</string>
+    <string name="virtual_space_active">Virtual Space Active</string>
+    <string name="virtual_space_description">Running isolated apps and games in container</string>
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         
         <item name="colorPrimary">@color/colorPrimary</item>

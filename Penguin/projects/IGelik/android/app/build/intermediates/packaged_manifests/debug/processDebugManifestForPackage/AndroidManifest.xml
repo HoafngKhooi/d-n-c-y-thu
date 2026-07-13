@@ -9,8 +9,11 @@
         android:targetSdkVersion="36" />
 
     <!-- Permissions -->
-
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.WIFI_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <permission
         android:name="com.igelik.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
@@ -19,6 +22,7 @@
     <uses-permission android:name="com.igelik.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 
     <application
+        android:name="com.igelik.app.MyApplication"
         android:allowBackup="true"
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:debuggable="true"
@@ -51,6 +55,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Virtual Space Service -->
+        <service
+            android:name="com.igelik.app.virtualspace.VirtualSpaceService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection|location"
+            android:process=":virtual_machine" >
+        </service>
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="com.igelik.app.androidx-startup"

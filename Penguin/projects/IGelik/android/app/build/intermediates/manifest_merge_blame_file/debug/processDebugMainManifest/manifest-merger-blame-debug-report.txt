@@ -9,147 +9,174 @@
 9        android:targetSdkVersion="36" />
 10
 11    <!-- Permissions -->
-12
-13    <uses-permission android:name="android.permission.INTERNET" />
-13-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:40:5-67
-13-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:40:22-64
-14
-15    <permission
-15-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:22:5-24:47
-16        android:name="com.igelik.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-16-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:23:9-81
-17        android:protectionLevel="signature" />
-17-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:24:9-44
-18
-19    <uses-permission android:name="com.igelik.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-19-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:26:5-97
-19-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:26:22-94
-20
-21    <application
-21-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:4:5-36:19
-22        android:allowBackup="true"
-22-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:5:9-35
-23        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-23-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:28:18-86
-24        android:debuggable="true"
-25        android:extractNativeLibs="false"
-26        android:icon="@mipmap/ic_launcher"
-26-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:6:9-43
-27        android:label="@string/app_name"
-27-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:7:9-41
-28        android:roundIcon="@mipmap/ic_launcher_round"
-28-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:8:9-54
-29        android:supportsRtl="true"
-29-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:9:9-35
-30        android:theme="@style/AppTheme" >
-30-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:10:9-40
-31        <activity
-31-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:12:9-25:20
-32            android:name="com.igelik.app.MainActivity"
-32-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:14:13-41
-33            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
-33-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:13:13-148
-34            android:exported="true"
-34-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:18:13-36
-35            android:label="@string/title_activity_main"
-35-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:15:13-56
-36            android:launchMode="singleTask"
-36-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:17:13-44
-37            android:theme="@style/AppTheme.NoActionBarLaunch" >
-37-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:16:13-62
-38            <intent-filter>
-38-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:20:13-23:29
-39                <action android:name="android.intent.action.MAIN" />
-39-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:21:17-69
-39-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:21:25-66
-40
-41                <category android:name="android.intent.category.LAUNCHER" />
-41-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:22:17-77
-41-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:22:27-74
-42            </intent-filter>
-43        </activity>
+12    <uses-permission android:name="android.permission.INTERNET" />
+12-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:49:5-67
+12-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:49:22-64
+13    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+13-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:50:5-77
+13-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:50:22-74
+14    <uses-permission android:name="android.permission.WAKE_LOCK" />
+14-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:51:5-68
+14-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:51:22-65
+15    <uses-permission android:name="android.permission.WIFI_LOCK" />
+15-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:52:5-68
+15-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:52:22-65
+16    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+16-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:53:5-95
+16-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:53:22-92
+17
+18    <permission
+18-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:22:5-24:47
+19        android:name="com.igelik.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+19-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:23:9-81
+20        android:protectionLevel="signature" />
+20-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:24:9-44
+21
+22    <uses-permission android:name="com.igelik.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+22-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:26:5-97
+22-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:26:22-94
+23
+24    <application
+24-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:4:5-46:19
+25        android:name="com.igelik.app.MyApplication"
+25-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:5:9-38
+26        android:allowBackup="true"
+26-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:6:9-35
+27        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+27-->[androidx.core:core:1.17.0] /home/codespace/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:28:18-86
+28        android:debuggable="true"
+29        android:extractNativeLibs="false"
+30        android:icon="@mipmap/ic_launcher"
+30-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:7:9-43
+31        android:label="@string/app_name"
+31-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:8:9-41
+32        android:roundIcon="@mipmap/ic_launcher_round"
+32-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:9:9-54
+33        android:supportsRtl="true"
+33-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:10:9-35
+34        android:theme="@style/AppTheme" >
+34-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:11:9-40
+35        <activity
+35-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:13:9-26:20
+36            android:name="com.igelik.app.MainActivity"
+36-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:15:13-41
+37            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+37-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:14:13-148
+38            android:exported="true"
+38-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:19:13-36
+39            android:label="@string/title_activity_main"
+39-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:16:13-56
+40            android:launchMode="singleTask"
+40-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:18:13-44
+41            android:theme="@style/AppTheme.NoActionBarLaunch" >
+41-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:17:13-62
+42            <intent-filter>
+42-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:21:13-24:29
+43                <action android:name="android.intent.action.MAIN" />
+43-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:22:17-69
+43-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:22:25-66
 44
-45        <provider
-46            android:name="androidx.core.content.FileProvider"
-46-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:28:13-62
-47            android:authorities="com.igelik.app.fileprovider"
-47-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:29:13-64
-48            android:exported="false"
-48-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:30:13-37
-49            android:grantUriPermissions="true" >
-49-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:31:13-47
-50            <meta-data
-50-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:32:13-34:64
-51                android:name="android.support.FILE_PROVIDER_PATHS"
-51-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:33:17-67
-52                android:resource="@xml/file_paths" />
-52-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:34:17-51
-53        </provider>
-54        <provider
-54-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
-55            android:name="androidx.startup.InitializationProvider"
-55-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
-56            android:authorities="com.igelik.app.androidx-startup"
-56-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
-57            android:exported="false" >
-57-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
-58            <meta-data
-58-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
-59                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-59-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
-60                android:value="androidx.startup" />
-60-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
-61            <meta-data
-61-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/codespace/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
-62                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-62-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/codespace/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
-63                android:value="androidx.startup" />
-63-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/codespace/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
-64            <meta-data
-64-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:29:13-31:52
-65                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-65-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:30:17-85
-66                android:value="androidx.startup" />
-66-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:31:17-49
-67        </provider>
-68
-69        <receiver
-69-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:34:9-52:20
-70            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-70-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:35:13-76
-71            android:directBootAware="false"
-71-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:36:13-44
-72            android:enabled="true"
-72-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:37:13-35
-73            android:exported="true"
-73-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:38:13-36
-74            android:permission="android.permission.DUMP" >
-74-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:39:13-57
-75            <intent-filter>
-75-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:40:13-42:29
-76                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-76-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:17-91
-76-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:25-88
-77            </intent-filter>
-78            <intent-filter>
-78-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:43:13-45:29
-79                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-79-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:17-85
-79-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:25-82
-80            </intent-filter>
-81            <intent-filter>
-81-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:46:13-48:29
-82                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-82-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:17-88
-82-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:25-85
-83            </intent-filter>
-84            <intent-filter>
-84-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:49:13-51:29
-85                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-85-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:17-95
-85-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:25-92
-86            </intent-filter>
-87        </receiver>
-88    </application>
-89
-90</manifest>
+45                <category android:name="android.intent.category.LAUNCHER" />
+45-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:23:17-77
+45-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:23:27-74
+46            </intent-filter>
+47        </activity>
+48
+49        <provider
+50            android:name="androidx.core.content.FileProvider"
+50-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:29:13-62
+51            android:authorities="com.igelik.app.fileprovider"
+51-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:30:13-64
+52            android:exported="false"
+52-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:31:13-37
+53            android:grantUriPermissions="true" >
+53-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:32:13-47
+54            <meta-data
+54-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:33:13-35:64
+55                android:name="android.support.FILE_PROVIDER_PATHS"
+55-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:34:17-67
+56                android:resource="@xml/file_paths" />
+56-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:35:17-51
+57        </provider>
+58
+59        <!-- Virtual Space Service -->
+60        <service
+60-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:39:9-44:19
+61            android:name="com.igelik.app.virtualspace.VirtualSpaceService"
+61-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:40:13-61
+62            android:exported="false"
+62-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:43:13-37
+63            android:foregroundServiceType="mediaProjection|location"
+63-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:42:13-69
+64            android:process=":virtual_machine" >
+64-->/workspaces/d-n-c-y-thu/Penguin/projects/IGelik/android/app/src/main/AndroidManifest.xml:41:13-47
+65        </service>
+66
+67        <provider
+67-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+68            android:name="androidx.startup.InitializationProvider"
+68-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+69            android:authorities="com.igelik.app.androidx-startup"
+69-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+70            android:exported="false" >
+70-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+71            <meta-data
+71-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+72                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+72-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+73                android:value="androidx.startup" />
+73-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+74            <meta-data
+74-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/codespace/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
+75                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+75-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/codespace/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
+76                android:value="androidx.startup" />
+76-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/codespace/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
+77            <meta-data
+77-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:29:13-31:52
+78                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+78-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:30:17-85
+79                android:value="androidx.startup" />
+79-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:31:17-49
+80        </provider>
+81
+82        <receiver
+82-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:34:9-52:20
+83            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+83-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:35:13-76
+84            android:directBootAware="false"
+84-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:36:13-44
+85            android:enabled="true"
+85-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:37:13-35
+86            android:exported="true"
+86-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:38:13-36
+87            android:permission="android.permission.DUMP" >
+87-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:39:13-57
+88            <intent-filter>
+88-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:40:13-42:29
+89                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+89-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:17-91
+89-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:25-88
+90            </intent-filter>
+91            <intent-filter>
+91-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:43:13-45:29
+92                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+92-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:17-85
+92-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:25-82
+93            </intent-filter>
+94            <intent-filter>
+94-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:46:13-48:29
+95                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+95-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:17-88
+95-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:25-85
+96            </intent-filter>
+97            <intent-filter>
+97-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:49:13-51:29
+98                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+98-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:17-95
+98-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/codespace/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:25-92
+99            </intent-filter>
+100        </receiver>
+101    </application>
+102
+103</manifest>

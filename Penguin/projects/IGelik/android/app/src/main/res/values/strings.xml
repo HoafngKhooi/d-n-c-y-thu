@@ -4,4 +4,11 @@
     <string name="title_activity_main">IGelik</string>
     <string name="package_name">com.igelik.app</string>
     <string name="custom_url_scheme">com.igelik.app</string>
+    <string name="battery_optimization_explanation">
+        To ensure the virtual space continues running smoothly in the background, 
+        please whitelist this app from battery optimization. This prevents the system 
+        from stopping the virtual space when the app is in the background.
+    </string>
+    <string name="virtual_space_active">Virtual Space Active</string>
+    <string name="virtual_space_description">Running isolated apps and games in container</string>
 </resources>

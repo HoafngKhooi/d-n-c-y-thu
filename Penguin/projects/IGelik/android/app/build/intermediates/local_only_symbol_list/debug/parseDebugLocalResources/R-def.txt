@@ -9,9 +9,12 @@ mipmap ic_launcher
 mipmap ic_launcher_foreground
 mipmap ic_launcher_round
 string app_name
+string battery_optimization_explanation
 string custom_url_scheme
 string package_name
 string title_activity_main
+string virtual_space_active
+string virtual_space_description
 style AppTheme
 style AppTheme.NoActionBar
 style AppTheme.NoActionBarLaunch

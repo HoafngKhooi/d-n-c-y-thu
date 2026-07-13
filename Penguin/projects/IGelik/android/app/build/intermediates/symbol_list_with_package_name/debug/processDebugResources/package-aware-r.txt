@@ -959,6 +959,7 @@ string abc_shareactionprovider_share_with_application
 string abc_toolbar_collapse_description
 string androidx_startup
 string app_name
+string battery_optimization_explanation
 string call_notification_answer_action
 string call_notification_answer_video_action
 string call_notification_decline_action
@@ -972,6 +973,8 @@ string package_name
 string search_menu_title
 string status_bar_notification_info_overflow
 string title_activity_main
+string virtual_space_active
+string virtual_space_description
 style AlertDialog_AppCompat
 style AlertDialog_AppCompat_Light
 style Animation_AppCompat_Dialog
