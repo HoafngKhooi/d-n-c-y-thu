@@ -1,0 +1,6 @@
+{
+  "name": "Bee Swarm Automation",
+  // Lệnh tự động cài đặt thư viện và chạy script tải file 50GB khi máy ảo bật lên
+  "postStartCommand": "pip install gdown huggingface_hub && python cloud_hub.py"
+}
+

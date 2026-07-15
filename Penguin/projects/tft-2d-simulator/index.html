@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TFT 2D Simulator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Đấu Trường Chân Lý (TFT) 2D Simulator</h1>
+            <div class="game-info">
+                <div>Vòng: <span id="round">1</span></div>
+                <div>Zodiac: <span id="zodiac">0</span>/10</div>
+                <div>Số dư: <span id="gold">10</span> Vàng</div>
+                <div>Máu: <span id="health">100</span>/100</div>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-board">
+                <div class="bench" id="bench">
+                    <h3>Đội hình dự bị</h3>
+                    <div class="slots" id="bench-slots"></div>
+                </div>
+                
+                <div class="arena" id="arena">
+                    <h3>Sân đấu</h3>
+                    <div class="grid" id="game-grid"></div>
+                </div>
+                
+                <div class="shop" id="shop">
+                    <h3>Cửa hàng</h3>
+                    <div class="slots" id="shop-slots"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="controls">
+                <button id="buy-btn">Mua tướng (2 Vàng)</button>
+                <button id="start-round-btn">Bắt đầu vòng</button>
+                <button id="reset-btn">Reset Game</button>
+            </div>
+        </footer>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
